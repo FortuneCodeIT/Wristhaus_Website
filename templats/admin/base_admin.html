@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %} - Wristhaus Store</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #141414;
+            --gold: #d4af37;
+            --gold-dark: #b8962e;
+            --gold-light: #e8c84a;
+            --cream: #f0e6d2;
+            --cream-muted: #b8aa98;
+            --white: #ffffff;
+            --danger: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+            --info: #17a2b8;
+        }
+        
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--bg-dark);
+            color: var(--cream);
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Admin Layout */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .admin-sidebar {
+            width: 250px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--gold-dark);
+            padding: 2rem 0;
+            position: fixed;
+            height: 100%;
+            
+        }
+        
+        .admin-brand {
+            text-align: center;
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid var(--gold-dark);
+        }
+        
+        .admin-brand h1 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--gold);
+            font-size: 1.8rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .admin-brand span {
+            color: var(--cream-muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        
+        .admin-nav {
+            padding: 1.5rem 0;
+        }
+        
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--cream-muted);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .admin-nav-item:hover,
+        .admin-nav-item.active {
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.05);
+            border-left-color: var(--gold);
+        }
+        
+        .admin-nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .admin-nav-item .badge {
+            margin-left: auto;
+            background: var(--gold);
+            color: var(--bg-dark);
+            padding: 0.1rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        /* Main Content */
+        .admin-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+        }
+        
+        /* Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--gold-dark);
+            margin-bottom: 2rem;
+        }
+        
+        .admin-header h2 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--cream);
+            font-size: 2rem;
+        }
+        
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .admin-user .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        .admin-user .avatar a {
+            color: var(--bg-dark);
+            text-decoration: none;
+        }
+        .admin-user .avatar a:hover {
+            color: var(--bg-dark);
+        }
+        
+        .admin-user a {
+            color: var(--cream-muted);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .admin-user a:hover {
+            color: var(--gold);
+        }
+        
+        /* Messages */
+        .messages {
+            margin-bottom: 1.5rem;
+        }
+        
+        .message {
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .message.success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .message.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .message.warning {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        .message.info {
+            background: rgba(23, 162, 184, 0.2);
+            border: 1px solid var(--info);
+            color: var(--info);
+        }
+        
+        /* Cards */
+        .admin-card {
+            background: var(--bg-card);
+            border: 1px solid var(--gold-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .admin-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--gold-dark);
+        }
+        
+        .admin-card-header h3 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--cream);
+            font-size: 1.4rem;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--gold-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card .stat-number {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--cream);
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .stat-card .stat-label {
+            color: var(--cream-muted);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        
+        .stat-card .stat-badge {
+            display: inline-block;
+            padding: 0.1rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+        
+        .stat-badge.warning {
+            background: var(--warning);
+            color: var(--bg-dark);
+        }
+        
+        .stat-badge.danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .stat-badge.success {
+            background: var(--success);
+            color: white;
+        }
+        
+        /* Tables */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .admin-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid var(--gold-dark);
+            color: var(--gold);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .admin-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            color: var(--cream-muted);
+        }
+        
+        .admin-table tr:hover td {
+            background: rgba(212, 175, 55, 0.02);
+        }
+        
+        .admin-table .product-image-small {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: var(--gold);
+            color: var(--bg-dark);
+        }
+        
+        .btn-primary:hover {
+            background: var(--gold-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: var(--bg-dark);
+        }
+        
+        .btn-warning:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-sm {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-top {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: var(--gold);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-top:hover {
+            background: var(--gold-dark);
+            transform: translateY(-2px);
+        }
+        
+        /* Forms */
+        .admin-form {
+            max-width: 800px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--cream);
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--gold-dark);
+            border-radius: 4px;
+            color: var(--cream);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        
+        .form-control::placeholder {
+            color: var(--cream-muted);
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gold-dark);
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        
+        .pagination a,
+        .pagination span {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gold-dark);
+            border-radius: 4px;
+            color: var(--cream-muted);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .pagination a:hover {
+            background: var(--gold);
+            color: var(--bg-dark);
+        }
+        
+        .pagination .current {
+            background: var(--gold);
+            color: var(--bg-dark);
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.in-stock {
+            background: rgba(40, 167, 69, 0.2);
+            color: var(--success);
+        }
+        
+        .status-badge.low-stock {
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--warning);
+        }
+        
+        .status-badge.out-of-stock {
+            background: rgba(220, 53, 69, 0.2);
+            color: var(--danger);
+        }
+        
+        /* Confirmation Modal */
+        .confirm-dialog {
+            text-align: center;
+        }
+        
+        .confirm-dialog .icon {
+            font-size: 4rem;
+            color: var(--danger);
+            margin-bottom: 1rem;
+        }
+        
+        .confirm-dialog h3 {
+            color: var(--cream);
+            margin-bottom: 0.5rem;
+        }
+        
+        .confirm-dialog p {
+            color: var(--cream-muted);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                width: 200px;
+            }
+            
+            .admin-content {
+                margin-left: 200px;
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-table {
+                font-size: 0.85rem;
+            }
+            
+            .admin-table th,
+            .admin-table td {
+                padding: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .admin-sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            
+            .admin-content {
+                margin-left: 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-brand">
+                <h1>Wristhaus</h1>
+                <span>Admin Panel</span>
+            </div>
+            
+            <nav class="admin-nav">
+                <a href="{% url 'admin_dashboard' %}" class="admin-nav-item {% if request.path == '/admin/dashboard/' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="{% url 'admin_products' %}" class="admin-nav-item {% if '/admin/products' in request.path %}active{% endif %}">
+                    <i class="fas fa-box"></i> Products
+                </a>
+                <a href="{% url 'admin_orders' %}" class="admin-nav-item {% if '/admin/orders' in request.path %}active{% endif %}">
+                    <i class="fas fa-shopping-bag"></i> Orders
+                </a>
+                <a href="{% url 'admin_profile' %}" class="admin-nav-item {% if '/dashboard/profile' in request.path %}active{% endif %}">
+                    <i class="fas fa-user-cog"></i> My Profile
+                </a>
+                <a href="{% url 'admin_dashboard' %}" class="admin-nav-item">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="{% url 'admin_review' %}" class="admin-nav-item {% if '/admin/reviews' in request.path %}active{% endif %}"">
+                    <i class="fas fa-users"></i> Client Reviews
+                </a>
+                <a href="{% url 'admin_dashboard' %}" class="admin-nav-item">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+                <a href="{% url 'admin:index' %}" class="admin-nav-item">
+                    <i class="fas fa-database"></i> Django Admin
+                </a>
+                <a href="{% url 'shop' %}" class="admin-nav-item" target="_blank">
+                    <i class="fas fa-store"></i> View Store
+                </a>
+                <a href="{% url 'admin_logout' %}" class="admin-nav-item" style="margin-top: 1rem; color: var(--danger);">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="admin-content">
+            <header class="admin-header">
+                <h2>{% block header %}{% endblock %}</h2>
+                <div class="admin-user">
+                    <span>Welcome, {{ request.user.username }}</span>
+                    <div class="avatar"><a href="{% url 'admin_profile' %}">{{ request.user.username|first|upper }}</a></div>
+                    <a href="{% url 'admin:logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </header>
+            
+            
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

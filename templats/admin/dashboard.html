@@ -1,0 +1,115 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-box"></i></div>
+        <div class="stat-number">{{ total_products }}</div>
+        <div class="stat-label">Total Products</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+        <div class="stat-number">{{ total_orders }}</div>
+        <div class="stat-label">Total Orders</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="stat-number">{{ total_items_sold }}</div>
+        <div class="stat-label">Items Sold</div>
+    </div>
+    <div class="stat-card" >
+        <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-number">{{ low_stock }}</div>
+        <div class="stat-label">Low Stock Items</div>
+        <span class="stat-badge {% if low_stock > 0 %}warning{% else %}success{% endif %}">
+            {% if low_stock > 0 %}⚠️ Needs Attention{% else %}✓ All Good{% endif %}
+        </span>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Quick Actions</h3>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'admin_product_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Product
+        </a>
+        <a href="{% url 'admin_products' %}" class="btn btn-success">
+            <i class="fas fa-list"></i> Manage Products
+        </a>
+        <a href="{% url 'admin_orders' %}" class="btn btn-warning">
+            <i class="fas fa-eye"></i> View Orders
+        </a>
+        <a href="{% url 'shop' %}" class="btn btn-primary" target="_blank">
+            <i class="fas fa-store"></i> View Store
+        </a>
+    </div>
+</div>
+
+<!-- Recent Products -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Recent Products</h3>
+        <a href="{% url 'admin_products' %}" class="btn btn-sm btn-primary">View All</a>
+    </div>
+    {% if recent_products %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in recent_products %}
+            <tr>
+                <td>
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image-small">
+                    {% else %}
+                    <span style="color: var(--cream-muted);">No Image</span>
+                    {% endif %}
+                </td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.get_category_display }}</td>
+                <td>₦{{ product.price }}</td>
+                <td>{{ product.stock }}</td>
+                <td>
+                    <span class="status-badge {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                        {% if product.stock > 10 %}In Stock
+                        {% elif product.stock > 0 %}Low Stock ({{ product.stock }})
+                        {% else %}Out of Stock{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <a href="{% url 'admin_product_edit' product.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'admin_product_delete' product.id %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--cream-muted); text-align: center; padding: 2rem;">
+        No products added yet. <a href="{% url 'admin_product_add' %}" style="color: var(--gold);">Add your first product</a>
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

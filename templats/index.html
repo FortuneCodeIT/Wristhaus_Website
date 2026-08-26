@@ -1,0 +1,500 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wristhaus — Timeless Bracelets, Made to Shine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Petit+Formal+Script&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+<link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<style>
+
+</style>
+<body>
+
+<header class="site">
+  <div class="wrap nav-row">
+    <a href="{% url 'index' %}" class="logo">
+      <svg class="mark" viewBox="0 0 40 40" fill="none"><path d="M24 6a14 14 0 1 0 10 23.9A11 11 0 0 1 24 6Z" fill="currentColor"/></svg>
+      <span>
+        <span class="word">Wristhaus</span>
+        <!-- <span class="sub">BRACELETS</span> -->
+      </span>
+    </a>
+    <nav class="main" id="desktop-nav">
+      <a href="{% url 'index' %}" class="active">Home</a>
+      <a href="{% url 'shop' %}">Shop</a>
+      <a href="{% url 'collections' %}">Collections</a>
+      <a href="{% url 'about' %}">About Us</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+
+    <nav class="main-mobile" id="mobile-nav">
+      <ul>
+      <li><a href="{% url 'index' %}" class="active">Home</a></li>
+      <li><a href="{% url 'shop' %}">Shop</a></li>
+      <li><a href="{% url 'collections' %}">Collections</a></li>
+      <li><a href="{% url 'about' %}">About Us</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+
+      <div class="nav-icons">
+      <button class="search" aria-label="Search"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+      <a href="{% url 'cart_page' %}" aria-label="Cart">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
+        <span class="cart-count">{{ cart_count|default:0 }}</span>
+      </a>
+      <!-- Add this to your navigation if user is logged in -->
+    {% if user.is_authenticated and user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}" class="admin-link">
+            <i class="fas fa-cog"></i> Admin
+        </a>
+    {% endif %}
+    <div class="bar-wrapper" id="openNav">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </div>
+      <!-- <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button> -->
+    </div>
+  </div>
+
+</header>
+
+<!-- HERO -->
+   <div class="wrap">
+<section class="hero" data-aos="fade-up">
+
+  <div class="hero-copy">
+    <span class="eyebrow">Elegant. Meaningful. You.</span>
+    <h1>Timeless Bracelets, <span class="script">Made to Shine</span></h1>
+    <p class="lede">Handcrafted with love. Designed to elevate every moment of your life.</p>
+    <div class="hero-actions">
+      <a href="{% url 'shop' %}" class="btn btn-primary">Shop Now <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="{% url 'collections' %}" class="btn btn-outline">Explore Collections</a>
+    </div>
+    <div class="hero-badges">
+      <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7z"/></svg>Premium Quality Materials</div>
+      <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2 4.8 5.4 4.1 7.6 3.6 10 4.7 12 7c2-2.3 4.4-3.4 6.6-2.9C22 4.8 23.3 8.4 21.5 12 19 16.4 12 21 12 21Z"/></svg>Handcrafted With Love</div>
+      <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></svg>Waterproof &amp; Tarnish Free</div>
+    </div>
+
+  </div>
+
+ <div class="slideshow-wrapper">
+    <div class="slideshow-track">
+    <!-- <div class="slide active" style="background-image: url('{% static 'images/p1.png' %}');"></div>
+    <div class="slide " style="background-image: url('{% static 'images/download.jpg' %}');"></div> -->
+    <img class="slide active" src="{% static 'images/w1.png' %}" alt="">
+    <img class="slide " src="{% static 'images/b1.png' %}" alt="">
+    <img class="slide " src="{% static 'images/w2.png' %}" alt="">
+  </div>
+ </div>
+      
+  <!-- <div class="hero-art">
+
+    <svg class="ring" style="width:340px;height:340px;top:-60px;right:-60px;" viewBox="0 0 100 100"><circle cx="50" cy="50" r="49" stroke="currentColor" fill="none"/></svg>
+    <svg class="ring" style="width:220px;height:220px;bottom:-40px;left:-40px;" viewBox="0 0 100 100"><circle cx="50" cy="50" r="49" stroke="currentColor" fill="none"/></svg>
+    <div class="hero-pill"><strong>New</strong>Arrivals<span>Shop Now</span></div>
+  </div> -->
+  </div>
+</section>
+
+<!-- PERKS -->
+<section class="perks" data-aos="fade-up">
+  <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="6" width="14" height="11"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/></svg><div><strong>Cash on</strong><span>Delivery</span></div></div>
+  <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 3 2.4 6.4L21 12l-6.6 2.6L12 21l-2.4-6.4L3 12l6.6-2.6Z"/></svg><div><strong>Premium</strong><span>Quality</span></div></div>
+  <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7z"/><path d="m9 12 2 2 4-4"/></svg><div><strong>Secure Payment</strong><span>100% safe &amp; secure</span></div></div>
+  <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9h18v11H3z"/><path d="M3 9 5 3h14l2 6"/><path d="M12 3v17"/></svg><div><strong>Gift Ready</strong><span>Beautiful packaging</span></div></div>
+   <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15v-3a9 9 0 0 1 18 0v3"/><path d="M21 15a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2v1Z"/><path d="M3 15a2 2 0 0 0 2 2h1v-5H5a2 2 0 0 0-2 2v1Z"/></svg><div><strong>24/7</strong><span>Support</span></div></div>
+</section>
+
+
+<!-- COLLECTIONS -->
+<section class="section" data-aos="fade-up">
+  <div class="wrap">
+    <div class="section-head left" style="display:flex;align-items:flex-end;justify-content:space-between;max-width:none;">
+      <div>
+        <span class="eyebrow">Explore Our Collections</span>
+        <h2>Find the Bracelet That Tells Your Story</h2>
+      </div>
+      <a href="{% url 'collections' %}" class="card-link">View All Collections <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <div class="grid-6">
+
+
+        {% for category in categories %}
+<div class="category-card" data-aos="zoom-in" data-aos-delay="{{ forloop.counter0|add:100 }}">
+    <a href="{% url 'shop' %}?category={{ category.code }}" class="category-link">
+        <div class="category-image">
+            {% with first_product=category.products|first %}
+            {% if first_product and first_product.image %}
+                <img src="{{ first_product.image.url }}" alt="{{ category.name }}">
+            {% else %}
+                <div class="no-image">
+                    <i class="fas fa-{% if category.code == 'watches' %}clock{% elif category.code == 'bracelets' %}gem{% elif category.code == 'smart-access' %}microchip{% else %}shield-alt{% endif %}"></i>
+                </div>
+                {% endif %}
+                
+
+                    {% if first_product.created_at > now|date:"Y-m-d"|add:"-7 days" %}
+                    <span class="new-badge">NEW</span>
+                    {% endif %}
+
+                    <span class="card-badge">{{ first_product.get_category_display }}</span>
+                {% endwith %}
+            
+            <div class="category-overlay">
+                <span class="category-count">{{ category.count }} Products</span>
+            </div>
+        </div>
+        <div class="category-info">
+            <h3>
+                {% if category.code == 'watches' %}
+                    <i class="fas fa-clock"></i>
+                {% elif category.code == 'bracelets' %}
+                    <i class="fas fa-gem"></i>
+                {% elif category.code == 'smart-access' %}
+                    <i class="fas fa-microchip"></i>
+                {% elif category.code == 'combat' %}
+                    <i class="fas fa-shield-alt"></i>
+                {% else %}
+                    <i class="fas fa-tag"></i>
+                {% endif %}
+                {{ category.name }}
+            </h3>
+            <span class="view-category">View Collection →</span>
+        </div>
+    </a>
+</div>
+{% empty %}
+    <div class="no-categories" style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: var(--bg); border: 1px solid var(--gold); border-radius: var(--radius-1);">
+        <i class="fas fa-box-open" style="font-size: 3rem; color: var(--gold);"></i>
+        <h3 style="color: var(--cream-deep); margin-top: 1rem;">No Categories Available</h3>
+        <p style="color: var(--cream-muted);">Add products to see categories here.</p>
+    </div>
+    
+{% endfor %}
+
+        <!-- {% for home_collection in home_collections %}
+      <div class="card"  data-product-id="{{ home_collection.id }}">
+       <a href="{% url 'product_detail' home_collection.id %}" class="card-link-wrapper" style="text-decoration: none; color: inherit;">
+
+        <div class="card-media"> <img src="/media/{{ home_collection.image }}" alt="{{ home_collection.name }}"><div class="bead-strand">   
+          <span class="bead" style="width:12px;height:12px;background:radial-gradient(circle at 35% 30%,#f3d98a,#a9821f);"></span>
+          <span class="bead b-red" style="width:11px;height:11px;"></span><span class="bead b-red" style="width:11px;height:11px;"></span><span class="bead b-red" style="width:11px;height:11px;"></span><span class="bead b-red" style="width:11px;height:11px;"></span><span class="bead b-red" style="width:11px;height:11px;"></span>
+        </div></div>
+        <div class="card-body">
+          <h3 class="card-title">{{ home_collection.name }}</h3>
+          <p class="card-description" style="color: var(--cream-muted);">{{ home_collection.description|truncatechars:60 }}</p>
+          <div class="card-rating"><span class="stars">★★★★</span><span>(32)</span></div>
+          <span class="card-price">&#8358; {{ home_collection.price }}</span>
+                  <div class="card-stock">
+               <span>In stock:</span>
+                   <span class="stock-status {% if home_collection.stock > 0 %}in-stock{% else %}out-of-stock{% endif %}">
+                {% if home_collection.stock > 0 %}
+                    <i class="fas fa-check-circle"></i> In Stock ({{ home_collection.stock }} available)
+                {% else %}
+                    <i class="fas fa-times-circle"></i> Out of Stock
+                {% endif %}
+            </span>
+            </div>
+        </div>
+
+        </a>
+
+        <div class="card-actions">
+            <button class="btn btn-buy add-to-cart-btn" data-product-id="{{ home_collection.id }}" >Add to Cart</button>
+            <button class="btn btn-buy buy-now-btn" data-product-id="{{ home_collection.id }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:6px;"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>Buy Now</button></div>
+      </div>
+
+      {% endfor %} -->
+
+     
+    </div>
+  </div>
+</section>
+
+
+
+<!-- Featured Products Section (Optional) -->
+<section class="section section-alt" style=" padding: 20px 0 80px;" data-aos="fade-up" data-aos-delay="200">
+    <div class="wrap">
+        <div class="section-head">
+            <span class="eyebrow">Featured</span>
+            <h2>Best Sellers</h2>
+        </div>
+        <div class="grid-4">
+            {% for product in home_collections|slice:":4" %}
+            <div class="card" data-aos="flip-left" data-aos-delay="{{ forloop.counter0|add:50 }}">
+                <a href="{% url 'product_detail' product.id %}">
+                    <div class="card-media">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="no-image">No Image</div>
+                        {% endif %}
+
+                        
+            {% if product.created_at > now|date:"Y-m-d"|add:"-7 days" %}
+              <span class="new-badge">NEW</span>
+            {% endif %}
+
+            <span class="card-badge">{{ product.get_category_display }}</span>
+
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ product.name }}</h3>
+                        <span class="card-price">₦{{ product.price }}</span>
+                    </div>
+                </a>
+                <div class="card-actions">
+                    <button class="btn btn-buy add-to-cart-btn" data-product-id="{{ product.id }}">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+                <p style="color: var(--cream-muted); grid-column: 1 / -1; text-align: center;">No featured products available.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- STORY -->
+<section class="story" >
+  <div class="story-media" data-aos="fade-right"><div class="arm"><img src="{% static 'images/w3.jpg' %}" alt=""></div></div>
+  <div class="story-copy" data-aos="fade-down">
+    <div class="eyebrow-line" ><span class="eyebrow">Our Story</span></div>
+    <h2>Crafted to Express Who You Are</h2>
+    <p>Every bracelet is carefully handcrafted with premium beads and threads to bring elegance, positivity and confidence into your everyday style.</p>
+    <div class="story-points">
+      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>Unique Designs</div>
+      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Positive Energy</div>
+      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2 4.8 5.4 4.1 7.6 3.6 10 4.7 12 7c2-2.3 4.4-3.4 6.6-2.9C22 4.8 23.3 8.4 21.5 12 19 16.4 12 21 12 21Z"/></svg>Made with Love</div>
+    </div>
+    <a href="{% url 'about' %}" class="btn btn-outline"  data-aos="fade-down" data-aos-delay="100">Learn More About Us</a>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section section-alt" data-aos="fade-up" data-aos-delay="400">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow-line" style="justify-content:center;"><span class="eyebrow">What Our Customers Say</span></div>
+      <h2>Trusted by Thousands</h2>
+    </div>
+    <div class="grid-4">
+    {% for review in reviews %}
+      <div class="testimonial" data-aos="flip-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+        <div class="stars">  {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= review.rating %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}</div>
+        <p>"{{ review.review }}"</p>
+        <strong>{{ review.name }}</strong>
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+
+
+<!-- NEWSLETTER -->
+<section class="newsletter">
+ <div data-aos="fade-up">
+  <span class="eyebrow">YOUR STYLE START HERE</span>
+  <p>Explore our latest collections, exclusive designs, and everyday inspiration. Find your perfect piece today.</p>
+
+    <a href="{% url 'shop' %}" class="btn ">Shop Now</a>
+</div>
+</section>
+
+
+
+<footer class="site" style="border-top: 1px solid var(--gold); padding-top: 40px;" >
+  <div class="wrap">
+    <div class="footer-grid" >
+      <div class="footer-col footer-newsletter" >
+        <h4>Stay Connected</h4>
+        <p>Get updates on new arrivals, offers and more.</p>
+        <form class="footer-newsletter-form">
+          <input type="email" placeholder="Enter your email" required aria-label="Email address" disabled>
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+      <div class="footer-col"><h4>Shop</h4><ul><li><a href="{% url 'shop' %}">All Wristhaus</a></li><li><a href="{% url 'collections' %}">Collections</a></li></ul></div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="{% url 'about' %}">About Us</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <ul>
+          <li><span>WhatsApp: +92 300 1234567</span></li>
+          <li><span>Email: hello@braceletcollection.com</span></li>
+        </ul>
+        <div class="footer-social">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 8h2V5h-2a4 4 0 0 0-4 4v2H9v3h2v7h3v-7h2.5L17 11h-3V9a1 1 0 0 1 1-1Z"/></svg></a>
+          <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 4v10.5a3 3 0 1 1-2.5-3"/><path d="M14 4c.4 2 2 3.5 4 3.8"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Wristhaus . All Rights Reserved.</div>
+  </div>
+</footer>
+
+<a href="https://wa.me/2347030816894" class="whatsapp-fab" aria-label="Chat on WhatsApp" target="_blank" data-aos="flip-up" data-aos-delay="{{ forloop.counter0|add:400 }}">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.6 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 1-2.3.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.9.3.1.4.2.5.3.1.2.1.9-.1 1.4Z"/></svg>
+</a>
+
+
+<script src="{% static 'script.js' %}"></script>
+
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+<script>
+
+
+$(document).ready(function() {
+    console.log('home page loaded');
+    console.log('CSRF Token:', '{{ csrf_token }}');
+    
+    // Log all product buttons for debugging
+    console.log('Add to Cart buttons found:', $('.add-to-cart-btn').length);
+    console.log('Buy Now buttons found:', $('.buy-now-btn').length);
+    
+    // Add to Cart functionality
+    $('.add-to-cart-btn, .buy-now-btn').click(function(e) {
+        e.preventDefault();
+        
+        console.log('===== BUTTON CLICKED =====');
+        
+        // Get product ID from data attribute
+        const productId = $(this).data('product-id');
+        const isBuyNow = $(this).hasClass('buy-now-btn');
+        const $button = $(this);
+        
+        console.log('Product ID from data attribute:', productId);
+        console.log('Product ID type:', typeof productId);
+        console.log('Is Buy Now:', isBuyNow);
+        console.log('Button HTML:', $(this).html());
+        
+        // Check if product ID exists
+        if (!productId || productId === undefined || productId === null) {
+            console.error('Product ID is missing!');
+            alert('Error: Product ID not found. Please refresh the page and try again.');
+            return;
+        }
+        
+        // Also check for product ID in parent elements (fallback)
+        let productIdFallback = $(this).closest('.card').data('product-id');
+        console.log('Fallback product ID from card:', productIdFallback);
+        
+        // Use fallback if needed
+        const finalProductId = productId || productIdFallback;
+        console.log('Final product ID to use:', finalProductId);
+        
+        // Disable button while processing
+        $button.prop('disabled', true);
+        $button.text('Adding...');
+        
+        const requestData = {
+            product_id: parseInt(finalProductId),
+            quantity: 1
+        };
+        
+        console.log('Sending data to server:', requestData);
+        
+        // Show loading indicator
+        $button.html('<i class="fas fa-spinner fa-spin"></i> Adding...');
+        
+        $.ajax({
+            url: "{% url 'add_to_cart' %}",
+            method: 'POST',
+            data: JSON.stringify(requestData),
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            contentType: 'application/json',
+            success: function(response) {
+                console.log('===== AJAX SUCCESS =====');
+                console.log('Response received:', response);
+                
+                if (response.success) {
+                    // Update cart count
+                    const cartCount = response.cart_count;
+                    console.log('Updating cart count to:', cartCount);
+                    $('.cart-count').text(cartCount);
+                    
+                    // Show success message
+                    alert(response.message);
+                    
+                    if (isBuyNow) {
+                        console.log('Redirecting to cart page...');
+                        window.location.href = "{% url 'cart_page' %}";
+                    }
+                } else {
+                    console.error('Error in response:', response.error);
+                    alert('Error: ' + response.error);
+                }
+                
+                // Re-enable button
+                $button.prop('disabled', false);
+                $button.html('<i class="fas fa-cart-plus"></i> Add to Cart');
+            },
+            error: function(xhr, status, error) {
+                console.log('===== AJAX ERROR =====');
+                console.error('Status:', status);
+                console.error('Error:', error);
+                console.error('Response Text:', xhr.responseText);
+                console.error('Status Code:', xhr.status);
+                
+                let errorMessage = 'An error occurred. ';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    console.error('Parsed error response:', response);
+                    if (response.error) {
+                        errorMessage += response.error;
+                    } else {
+                        errorMessage += 'Please try again.';
+                    }
+                } catch(e) {
+                    console.error('Could not parse error response:', e);
+                    errorMessage += 'Please check the console for details.';
+                }
+                
+                alert(errorMessage);
+                
+                // Re-enable button
+                $button.prop('disabled', false);
+                $button.html('<i class="fas fa-cart-plus"></i> Add to Cart');
+            }
+        });
+    });
+    
+    // Debug: Log all product IDs on the page
+    console.log('All products on page:');
+    $('.card').each(function(index) {
+        const productId = $(this).data('product-id');
+        const name = $(this).find('.card-title').text();
+        console.log(`  Product ${index + 1}: ID=${productId}, Name="${name}"`);
+    });
+});
+
+
+</script>
+</body>
+</html>

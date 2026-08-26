@@ -1,0 +1,61 @@
+
+
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block header %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <form method="post" enctype="multipart/form-data" class="admin-form">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">Product Name</label>
+                {{ form.name }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">Category</label>
+                {{ form.category }}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.price.id_for_label }}">Price (₦)</label>
+                {{ form.price }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.stock.id_for_label }}">Stock Quantity</label>
+                {{ form.stock }}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.image.id_for_label }}">Product Image</label>
+            {{ form.image }}
+            {% if product and product.image %}
+            <div style="margin-top: 0.5rem;">
+                <small style="color: var(--cream-muted);">Current image:</small>
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width: 100px; max-height: 100px; display: block; margin-top: 0.5rem; border-radius: 4px;">
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ button_text }}
+            </button>
+            <a href="{% url 'admin_products' %}" class="btn btn-danger">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Admin Profile{% endblock %}
+{% block header %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h3>Profile Information</h3>
+            <span style="color: var(--cream-muted); font-size: 0.9rem;">
+                <i class="fas fa-user-shield" style="color: var(--gold);"></i> Admin Account
+            </span>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">
+                        <i class="fas fa-user" style="color: var(--gold); margin-right: 0.5rem;"></i>
+                        Username
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <small class="error-text">{{ form.username.errors }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">
+                        <i class="fas fa-envelope" style="color: var(--gold); margin-right: 0.5rem;"></i>
+                        Email Address
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <small class="error-text">{{ form.email.errors }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">
+                        <i class="fas fa-user-tag" style="color: var(--gold); margin-right: 0.5rem;"></i>
+                        First Name
+                    </label>
+                    {{ form.first_name }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">
+                        <i class="fas fa-user-tag" style="color: var(--gold); margin-right: 0.5rem;"></i>
+                        Last Name
+                    </label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="{% url 'admin_change_password' %}" class="btn btn-warning">
+                    <i class="fas fa-key"></i> Change Password
+                </a>
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Account Information Card -->
+    <div class="admin-card" style="margin-top: 1.5rem;">
+        <div class="admin-card-header">
+            <h3>Account Information</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="background: var(--bg-dark); padding: 1rem; border-radius: 4px;">
+                <small style="color: var(--cream-muted);">Username</small>
+                <p style="color: var(--cream); font-weight: 500; margin-top: 0.25rem;">
+                    <i class="fas fa-user" style="color: var(--gold);"></i> {{ user.username }}
+                </p>
+            </div>
+            <div style="background: var(--bg-dark); padding: 1rem; border-radius: 4px;">
+                <small style="color: var(--cream-muted);">Email</small>
+                <p style="color: var(--cream); font-weight: 500; margin-top: 0.25rem;">
+                    <i class="fas fa-envelope" style="color: var(--gold);"></i> {{ user.email }}
+                </p>
+            </div>
+            <div style="background: var(--bg-dark); padding: 1rem; border-radius: 4px;">
+                <small style="color: var(--cream-muted);">Role</small>
+                <p style="color: var(--cream); font-weight: 500; margin-top: 0.25rem;">
+                    <i class="fas fa-user-shield" style="color: var(--gold);"></i> 
+                    {% if user.is_superuser %}Super Admin{% else %}Admin{% endif %}
+                </p>
+            </div>
+            <div style="background: var(--bg-dark); padding: 1rem; border-radius: 4px;">
+                <small style="color: var(--cream-muted);">Last Login</small>
+                <p style="color: var(--cream); font-weight: 500; margin-top: 0.25rem;">
+                    <i class="fas fa-clock" style="color: var(--gold);"></i> 
+                    {{ user.last_login|date:"F d, Y H:i"|default:"Never" }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 800px;
+}
+
+.error-text {
+    color: #dc3545;
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--cream);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--gold-dark);
+    border-radius: 4px;
+    color: var(--cream);
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.form-control::placeholder {
+    color: var(--cream-muted);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--gold);
+    color: var(--bg-dark);
+}
+
+.btn-primary:hover {
+    background: var(--gold-dark);
+    transform: translateY(-2px);
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: var(--bg-dark);
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

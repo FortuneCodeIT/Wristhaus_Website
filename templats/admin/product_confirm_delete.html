@@ -1,0 +1,24 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Delete Product{% endblock %}
+{% block header %}Delete Product{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="confirm-dialog">
+        <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
+        <h3>Are you sure you want to delete "{{ product.name }}"?</h3>
+        <p>This action cannot be undone. All data related to this product will be permanently removed.</p>
+        
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Yes, Delete
+            </button>
+        </form>
+        <a href="{% url 'admin_products' %}" class="btn btn-primary">
+            <i class="fas fa-times"></i> Cancel
+        </a>
+    </div>
+</div>
+{% endblock %}
