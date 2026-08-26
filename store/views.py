@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from .models import Home_Collection, Shop_All, Cart, CartItem, ClientReview
 from .forms import ProductForm, ReviewForm, AdminProfileForm, AdminPasswordChangeForm  # We'll create this
 from django.utils import timezone
+import urllib.parse
 
 import json
 import logging
@@ -215,7 +216,7 @@ def cart_page(request):
     cart_count = cart.get_total_items()
     total_price = cart.get_total_price()
     
-    whatsapp_message = generate_whatsapp_message(cart_items, total_price)
+    whatsapp_message = generate_whatsapp_message(cart_items, total_price, request)
     
     context = {
         'cart_items': cart_items,
@@ -226,18 +227,53 @@ def cart_page(request):
     
     return render(request, 'cart.html', context)
 
-def generate_whatsapp_message(cart_items, total_price):
+def generate_whatsapp_message(cart_items, total_price, request=None):
     if not cart_items:
         return "Your cart is empty."
     
-    message = "🛍️ *New Order Details*\n\n"
-    message += "*Items:*\n"
+    # Get base URL
+    base_url = ""
+    if request:
+        base_url = request.build_absolute_uri('/').rstrip('/')
     
+    # START with image URLs (WhatsApp will show previews at top)
+    message = ""
+    
+    # Add all image URLs at the beginning for previews
     for item in cart_items:
-        message += f"• {item.product.name} x{item.quantity} = ₦{item.get_total_price()}\n"
+        product = item.product
+        if product.image and request:
+            image_url = base_url + product.image.url
+            message += f"{image_url}\n"
     
-    message += f"\n*Total: ₦{total_price}*\n\n"
-    message += "Thank you for shopping with us! 🛒"
+    message += "\n"
+    
+    # Now add the actual order details
+    message += "🛍️ *WRISTHAUS - NEW ORDER* 🛍️\n"
+    message += "═" * 35 + "\n\n"
+    
+    for i, item in enumerate(cart_items, 1):
+        product = item.product
+        subtotal = item.get_total_price()
+        
+        message += f"*Item {i}: {product.name}*\n"
+        message += f"💰 Price: ₦{product.price}\n"
+        message += f"📦 Quantity: {item.quantity}\n"
+        message += f"💵 Subtotal: ₦{subtotal}\n\n"
+    
+    message += "═" * 35 + "\n"
+    message += f"💰 *TOTAL: ₦{total_price}*\n"
+    message += "═" * 35 + "\n\n"
+    
+    message += "📋 *Order Summary:*\n"
+    for item in cart_items:
+        message += f"  • {item.product.name} x{item.quantity} = ₦{item.get_total_price()}\n"
+    
+    message += f"\n📍 *Total: ₦{total_price}*\n\n"
+    message += "✅ *Please reply with your delivery address.*\n"
+    message += "📞 *We'll confirm your order immediately.*\n"
+    message += "🛡️ *Secure payment on delivery.*\n\n"
+    message += "_Thank you for shopping at Wristhaus!_ 🙏"
     
     return message
 
@@ -263,10 +299,15 @@ def checkout_to_whatsapp(request):
             
 
     
-    message = generate_whatsapp_message(cart_items, total_price)
-    phone_number = "2347030816894"  # CHANGE THIS TO YOUR NUMBER
-    whatsapp_url = f"https://wa.me/{phone_number}?text={message.replace(' ', '%20').replace('\n', '%0A')}"
+    message = generate_whatsapp_message(cart_items, total_price, request)
+        # Encode message for URL
+    encoded_message = urllib.parse.quote(message)
     
+    phone_number = "2347030816894"  # CHANGE THIS TO YOUR NUMBER
+        # Build WhatsApp URL
+    whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
+    
+
     return redirect(whatsapp_url)
 
 # NEW: Update cart item quantity (for cart page)

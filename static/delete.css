@@ -1799,3 +1799,14 @@ nav.main-mobile ul a li {
     }
 }
 
+
+    color: var(--gold);
+    font-size: 13px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--gold);
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin-left: 10px;

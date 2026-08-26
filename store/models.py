@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 
+
 # Your existing models
 class Home_Collection(models.Model):
     CATEGORY_CHOICES = [
@@ -35,13 +36,19 @@ class Shop_All(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    image = models.ImageField(upload_to='product_images/')
+    image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     stock = models.IntegerField(default=10)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
+    
+    def get_image_url(self):
+        """Get the full image URL for WhatsApp"""
+        if self.image:
+            return self.image.url
+        return None
     
     # def save(self, *args, **kwargs):
     #     if not self.slug:          

@@ -212,6 +212,9 @@
             {% else %}
               <div class="no-image">No Image</div>
             {% endif %}
+             {% if shop_all.stock <= 0 %}
+                  <span class="sold-out-badge">Sold Out</span>
+              {% endif %}
             {% if shop_all.created_at > now|date:"Y-m-d"|add:"-7 days" %}
               <span class="new-badge">NEW</span>
             {% endif %}
@@ -235,6 +238,7 @@
                 {% else %}
                     <i class="fas fa-times-circle"></i> Out of Stock
                 {% endif %}
+
             </span>
             </div>
         </div>
