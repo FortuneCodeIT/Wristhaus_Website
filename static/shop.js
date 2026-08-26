@@ -19,7 +19,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     updateCartCount(response.cart_count);
-                    // alert(response.message);
+                    alert(response.message);
                     
                     if (isBuyNow) {
                         window.location.href = "{% url 'cart_page' %}";

@@ -23,52 +23,86 @@
 {% block content %}
 <header class="site">
   <div class="wrap nav-row">
+    <!-- Logo -->
     <a href="{% url 'index' %}" class="logo">
-      <svg class="mark" viewBox="0 0 40 40" fill="none"><path d="M24 6a14 14 0 1 0 10 23.9A11 11 0 0 1 24 6Z" fill="currentColor"/></svg>
+      <svg class="mark" viewBox="0 0 40 40" fill="none">
+        <path d="M24 6a14 14 0 1 0 10 23.9A11 11 0 0 1 24 6Z" fill="currentColor"/>
+      </svg>
       <span>
         <span class="word">Wristhaus</span>
-        <!-- <span class="sub">BRACELETS</span> -->
       </span>
     </a>
+
+    <!-- Desktop Navigation -->
     <nav class="main" id="desktop-nav">
       <a href="{% url 'index' %}">Home</a>
-      <a href="{% url 'shop' %}"  class="active">Shop</a>
+      <a href="{% url 'shop' %}" class="active">Shop</a>
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
     </nav>
 
+    <!-- Mobile Navigation Sidebar -->
     <nav class="main-mobile" id="mobile-nav">
+      <div class="nav-header">
+        <div>
+          <div class="logo-text">Wristhaus</div>
+          <div class="logo-sub">Luxury Watches</div>
+        </div>
+      </div>
       <ul>
-      <li><a href="{% url 'index' %}">Home</a></li>
-      <li><a href="{% url 'shop' %}"  class="active">Shop</a></li>
-      <li><a href="{% url 'collections' %}">Collections</a></li>
-      <li><a href="{% url 'about' %}">About Us</a></li>
-      <li><a href="{% url 'contact' %}">Contact</a></li>
+        <li><a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="{% url 'shop' %}"  class="active"><i class="fas fa-store"></i> Shop</a></li>
+        <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
+        <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
+        <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+        {% if user.is_authenticated and user.is_superuser %}
+        <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
+        {% endif %}
+        <li><a href="{% url 'cart_page' %}">
+            <i class="fas fa-shopping-cart">               
+            </i> Cart <span class="badge">{{ cart_count|default:0 }}</span></a></li>
       </ul>
     </nav>
 
-      <div class="nav-icons">
-      <button class="search" aria-label="Search"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+    <!-- Nav Icons -->
+    <div class="nav-icons">
+      <button class="search" aria-label="Search">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+      </button>
+      
       <a href="{% url 'cart_page' %}" aria-label="Cart">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M6 6h15l-1.5 9h-12z"/>
+          <path d="M6 6 5 3H2"/>
+          <circle cx="9" cy="20" r="1.4"/>
+          <circle cx="18" cy="20" r="1.4"/>
+        </svg>
         <span class="cart-count">{{ cart_count|default:0 }}</span>
       </a>
-      <!-- Add this to your navigation if user is logged in -->
-    {% if user.is_authenticated and user.is_superuser %}
-        <a href="{% url 'admin_dashboard' %}" class="admin-link">
-            <i class="fas fa-cog"></i> Admin
-        </a>
-    {% endif %}
-    <div class="bar-wrapper" id="openNav">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-    </div>
-      <!-- <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button> -->
+
+      <!-- Admin Link (Desktop) -->
+      {% if user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}" class="admin-link" style="color: var(--gold); font-size: 13px; letter-spacing: .08em; text-transform: uppercase;">
+        <i class="fas fa-cog"></i> Admin
+      </a>
+      {% endif %}
+
+      <!-- Hamburger Button -->
+        <div class="bar-wrapper" id="openNav">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+
     </div>
   </div>
 
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay"></div>
 </header>
 
 <div class="page-header" data-aos="fade-down">
@@ -169,6 +203,7 @@
 </footer>
 
 
+<script src="{% static 'script.js' %}"></script>
 <script src="{% static 'shop.js' %}"></script>
 
 <!-- Add this JavaScript for cart functionality -->

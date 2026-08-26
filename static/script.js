@@ -43,7 +43,7 @@ openNav.addEventListener('click', () => {
     toggle.addEventListener('click', () => {
       const open = nav.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      nav.style.display = open ? 'flex' : '';
+      nav.style.display = open ? 'block' : '';
       if (open) {
         nav.style.position = 'absolute';
         nav.style.top = '100%';
