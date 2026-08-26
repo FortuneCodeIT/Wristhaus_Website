@@ -231,24 +231,34 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
     if not cart_items:
         return "Your cart is empty."
     
-    # Get base URL
+    # Get base URL for images
     base_url = ""
     if request:
         base_url = request.build_absolute_uri('/').rstrip('/')
     
+    # If request is None, use your deployed URL
+    if not base_url:
+        base_url = "https://wristhaus-website.onrender.com"
+    
     # START with image URLs (WhatsApp will show previews at top)
     message = ""
     
-    # Add all image URLs at the beginning for previews
+    # Add ALL image URLs at the VERY TOP for WhatsApp previews
     for item in cart_items:
         product = item.product
-        if product.image and request:
-            image_url = base_url + product.image.url
-            message += f"{image_url}\n"
+        if product.image:
+            # Build the full image URL
+            if product.image.url.startswith('http'):
+                image_url = product.image.url
+            else:
+                image_url = base_url + product.image.url
+            
+            message += f"{image_url}\n"  # Just the URL, no emoji
     
-    message += "\n"
+    # Add spacing after images
+    message += "\n" * 2
     
-    # Now add the actual order details
+    # Now add the order details
     message += "🛍️ *WRISTHAUS - NEW ORDER* 🛍️\n"
     message += "═" * 35 + "\n\n"
     
