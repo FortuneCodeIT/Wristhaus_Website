@@ -25,9 +25,7 @@
   <div class="wrap nav-row">
     <!-- Logo -->
     <a href="{% url 'index' %}" class="logo">
-      <svg class="mark" viewBox="0 0 40 40" fill="none">
-        <path d="M24 6a14 14 0 1 0 10 23.9A11 11 0 0 1 24 6Z" fill="currentColor"/>
-      </svg>
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
       <span>
         <span class="word">Wristhaus</span>
       </span>
@@ -45,10 +43,12 @@
     <!-- Mobile Navigation Sidebar -->
     <nav class="main-mobile" id="mobile-nav">
       <div class="nav-header">
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="">
         <div>
           <div class="logo-text">Wristhaus</div>
-          <div class="logo-sub">Luxury Watches</div>
+          <!-- <div class="logo-sub">Luxury Watches</div> -->
         </div>
+      </div>
       </div>
       <ul>
         <li><a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a></li>
@@ -86,7 +86,16 @@
 
       <!-- Admin Link (Desktop) -->
       {% if user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'admin_dashboard' %}" class="admin-link" style="color: var(--gold); font-size: 13px; letter-spacing: .08em; text-transform: uppercase;">
+      <a href="{% url 'admin_dashboard' %}" class="admin-link" style=" color: var(--gold);
+        font-size: 13px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--gold);
+        padding: 5px 10px;
+        border-radius: 6px;
+        margin-left: 10px;">
         <i class="fas fa-cog"></i> Admin
       </a>
       {% endif %}

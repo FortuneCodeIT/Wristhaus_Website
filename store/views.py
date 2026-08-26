@@ -280,9 +280,7 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
         message += f"  • {item.product.name} x{item.quantity} = ₦{item.get_total_price()}\n"
     
     message += f"\n📍 *Total: ₦{total_price}*\n\n"
-    message += "✅ *Please reply with your delivery address.*\n"
     message += "📞 *We'll confirm your order immediately.*\n"
-    message += "🛡️ *Secure payment on delivery.*\n\n"
     message += "_Thank you for shopping at Wristhaus!_ 🙏"
     
     return message

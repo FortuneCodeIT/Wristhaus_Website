@@ -19,9 +19,7 @@
   <div class="wrap nav-row">
     <!-- Logo -->
     <a href="{% url 'index' %}" class="logo">
-      <svg class="mark" viewBox="0 0 40 40" fill="none">
-        <path d="M24 6a14 14 0 1 0 10 23.9A11 11 0 0 1 24 6Z" fill="currentColor"/>
-      </svg>
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
       <span>
         <span class="word">Wristhaus</span>
       </span>
@@ -39,9 +37,10 @@
     <!-- Mobile Navigation Sidebar -->
     <nav class="main-mobile" id="mobile-nav">
       <div class="nav-header">
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="">
         <div>
           <div class="logo-text">Wristhaus</div>
-          <div class="logo-sub">Luxury Watches</div>
+          <!-- <div class="logo-sub">Luxury Watches</div> -->
         </div>
       </div>
       <ul>
@@ -80,7 +79,16 @@
 
       <!-- Admin Link (Desktop) -->
       {% if user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'admin_dashboard' %}" class="admin-link" style="color: var(--gold); font-size: 13px; letter-spacing: .08em; text-transform: uppercase;">
+      <a href="{% url 'admin_dashboard' %}" class="admin-link" style=" color: var(--gold);
+        font-size: 13px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--gold);
+        padding: 5px 10px;
+        border-radius: 6px;
+        margin-left: 10px;">
         <i class="fas fa-cog"></i> Admin
       </a>
       {% endif %}
@@ -110,22 +118,22 @@
 <section class="about-hero">
   <div class="copy"  data-aos="fade-right">
     <span class="eyebrow">Our Story</span>
-    <h1 style="font-size:44px;margin-top:12px;">Crafted in Small Batches, Worn for a Lifetime</h1>
-    <p style="margin-top:18px;max-width:440px;">Wristhaus began in 2019 with a single question: why does jewelry that's meant to last so rarely does? We set out to design bracelets, watches and other wrist accessories that hold up to real life — waterproof, tarnish-free, and made with the kind of care that shows.</p>
+    <h1 style="font-size:44px;margin-top:12px;">Curated from Trusted Brands, Worn for a Lifetime</h1>
+    <p style="margin-top:18px;max-width:440px;">Wristhaus began in 2026 with a simple idea: great style shouldn't come at the cost of durability. We partner with brands that share our commitment to quality — sourcing watches, bracelets, and accessories that are waterproof, tarnish-free, and built to keep up with your everyday life.</p>
     <a href="{% url 'shop' %}" class="btn btn-primary" style="margin-top:26px;">Shop Our Pieces</a>
   </div>
   <div class="media" data-aos="fade-down">
-
+    <img src="{% static 'images/wristhaus_logo2.jpg' %}" alt="">
    
   </div>
 </section>
 
 <div class="stats-row" data-aos="fade-up">
-  <div class="stat"><strong>2019</strong><span>Founded</span></div>
-  <div class="stat"><strong>40k+</strong><span>Watches Shipped</span></div>
-  <div class="stat"><strong>50k+</strong><span>Bracelets Shipped</span></div>
-  <div class="stat"><strong>2,500+</strong><span>5-Star Reviews</span></div>
-  <div class="stat"><strong>12</strong><span>Artisan Partners</span></div>
+  <div class="stat"><strong>2026</strong><span>Founded</span></div>
+  <div class="stat"><strong>150+</strong><span>curated Watches</span></div>
+  <div class="stat"><strong>200+</strong><span>Curated Bracelets</span></div>
+  <div class="stat"><strong>100+</strong><span>5-Star Reviews</span></div>
+  <div class="stat"><strong>5</strong><span>Trusted Partners</span></div>
 </div>
 
 <section class="section">
@@ -133,9 +141,9 @@
     <div class="story-block">
       <div class="story-media"  data-aos="fade-right" data-aos-delay="200"><img src="{% static 'images/b3.jpg' %}" alt=""></div>
       <div  data-aos="fade-down" data-aos-delay="100">
-        <span class="eyebrow">Handcrafted, Not Mass-Produced</span>
-        <h2 style="font-size:30px;margin-top:10px;">Every Piece Passes Through Human Hands</h2>
-        <p style="margin-top:14px;">Our artisans work in small studios, not factories. Each bracelet is measured, set, and finished individually — which means slight variations, and also means someone actually cared about the one you're wearing.</p>
+        <span class="eyebrow">Carefully Curated, Not Mass-Produced</span>
+        <h2 style="font-size:30px;margin-top:10px;">Every Piece Is Chosen with Purpose</h2>
+        <p style="margin-top:14px;">We don't do factory bulk. Every brand we partner with is selected for their craftsmanship and attention to detail. Each accessory is thoughtfully sourced — which means slight variations, and also means real care went into the piece you're wearing.</p>
       </div>
     </div>
   </div>
@@ -148,7 +156,8 @@
       <div data-aos="fade-down" data-aos-delay="100">
         <span class="eyebrow">Built to Actually Wear</span>
         <h2 style="font-size:30px;margin-top:10px;">Waterproof, Hypoallergenic, Tarnish-Free</h2>
-        <p style="margin-top:14px;">Shower in it. Swim in it. Forget you're wearing it. Every finish is engineered to resist tarnish and skin sensitivity, so your bracelet Combo still looks new a year from now — not just on day one.</p>
+        <p style="margin-top:14px;">Shower in it. Swim in it. Forget you're wearing it.
+Every piece is selected for its durability — engineered to resist tarnish and skin sensitivity, so your accessory still looks new a year from now, not just on day one.</p>
       </div>
     </div>
   </div>
@@ -163,18 +172,18 @@
     <div class="grid-3">
       <div style="text-align:center;padding:0 20px;">
         <div class="value-media" style="margin:0 auto 18px;width:88px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2 4.8 5.4 4.1 7.6 3.6 10 4.7 12 7c2-2.3 4.4-3.4 6.6-2.9C22 4.8 23.3 8.4 21.5 12 19 16.4 12 21 12 21Z"/></svg></div>
-        <strong style="font-family:var(--display);font-size:19px;color:var(--olive);display:block;margin-bottom:8px;">Made With Intention</strong>
-        <p>Every design starts as a sketch on a real question — what does this need to say about the person wearing it.</p>
+        <strong style="font-family:var(--display);font-size:19px;color:var(--olive);display:block;margin-bottom:8px;">Curated with Intention</strong>
+        <p>Every piece is chosen with a question in mind — what does this say about the person wearing it?</p>
       </div>
       <div style="text-align:center;padding:0 20px;">
         <div class="value-media" style="margin:0 auto 18px;width:88px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></svg></div>
         <strong style="font-family:var(--display);font-size:19px;color:var(--olive);display:block;margin-bottom:8px;">Responsibly Sourced</strong>
-        <p>Recycled metals, conflict-free stones, and packaging that breaks down instead of piling up.</p>
+        <p>We partner with brands that use recycled metals, conflict-free materials, and sustainable packaging that breaks down instead of piling up.</p>
       </div>
       <div style="text-align:center;padding:0 20px;">
         <div class="value-media" style="margin:0 auto 18px;width:88px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg></div>
         <strong style="font-family:var(--display);font-size:19px;color:var(--olive);display:block;margin-bottom:8px;">Backed for Life</strong>
-        <p>Every piece ships with our lifetime warranty. If a clasp fails, we fix it — no questions, no fine print.</p>
+        <p>Every piece curated with our lifetime durabily assurance. </p>
       </div>
     </div>
   </div>

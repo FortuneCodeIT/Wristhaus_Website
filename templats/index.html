@@ -20,9 +20,7 @@
   <div class="wrap nav-row">
     <!-- Logo -->
     <a href="{% url 'index' %}" class="logo">
-      <svg class="mark" viewBox="0 0 40 40" fill="none">
-        <path d="M24 6a14 14 0 1 0 10 23.9A11 11 0 0 1 24 6Z" fill="currentColor"/>
-      </svg>
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
       <span>
         <span class="word">Wristhaus</span>
       </span>
@@ -40,9 +38,10 @@
     <!-- Mobile Navigation Sidebar -->
     <nav class="main-mobile" id="mobile-nav">
       <div class="nav-header">
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="">
         <div>
           <div class="logo-text">Wristhaus</div>
-          <div class="logo-sub">Luxury Watches</div>
+          <!-- <div class="logo-sub">Luxury Watches</div> -->
         </div>
       </div>
       <ul>
@@ -81,7 +80,16 @@
 
       <!-- Admin Link (Desktop) -->
       {% if user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'admin_dashboard' %}" class="admin-link" style="color: var(--gold); font-size: 13px; letter-spacing: .08em; text-transform: uppercase;">
+      <a href="{% url 'admin_dashboard' %}" class="admin-link" style=" color: var(--gold);
+        font-size: 13px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--gold);
+        padding: 5px 10px;
+        border-radius: 6px;
+        margin-left: 10px;">
         <i class="fas fa-cog"></i> Admin
       </a>
       {% endif %}
@@ -106,15 +114,15 @@
 
   <div class="hero-copy">
     <span class="eyebrow">Elegant. Meaningful. You.</span>
-    <h1>Timeless Bracelets, <span class="script">Made to Shine</span></h1>
-    <p class="lede">Handcrafted with love. Designed to elevate every moment of your life.</p>
+    <h1>Timeless Accessories, <span class="script">Curated for You</span></h1>
+    <p class="lede">Sourced from trusted brands. Selected to elevate every moment of your life.</p>
     <div class="hero-actions">
       <a href="{% url 'shop' %}" class="btn btn-primary">Shop Now <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a href="{% url 'collections' %}" class="btn btn-outline">Explore Collections</a>
     </div>
     <div class="hero-badges">
       <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7z"/></svg>Premium Quality Materials</div>
-      <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2 4.8 5.4 4.1 7.6 3.6 10 4.7 12 7c2-2.3 4.4-3.4 6.6-2.9C22 4.8 23.3 8.4 21.5 12 19 16.4 12 21 12 21Z"/></svg>Handcrafted With Love</div>
+      <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2 4.8 5.4 4.1 7.6 3.6 10 4.7 12 7c2-2.3 4.4-3.4 6.6-2.9C22 4.8 23.3 8.4 21.5 12 19 16.4 12 21 12 21Z"/></svg>Curated With Love</div>
       <div class="hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></svg>Waterproof &amp; Tarnish Free</div>
     </div>
 
@@ -141,7 +149,7 @@
 
 <!-- PERKS -->
 <section class="perks" data-aos="fade-up">
-  <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="6" width="14" height="11"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/></svg><div><strong>Cash on</strong><span>Delivery</span></div></div>
+  <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="6" width="14" height="11"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/></svg><div><strong>Tested &amp;</strong><span>Trusted</span></div></div>
   <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 3 2.4 6.4L21 12l-6.6 2.6L12 21l-2.4-6.4L3 12l6.6-2.6Z"/></svg><div><strong>Premium</strong><span>Quality</span></div></div>
   <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7z"/><path d="m9 12 2 2 4-4"/></svg><div><strong>Secure Payment</strong><span>100% safe &amp; secure</span></div></div>
   <div class="perk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9h18v11H3z"/><path d="M3 9 5 3h14l2 6"/><path d="M12 3v17"/></svg><div><strong>Gift Ready</strong><span>Beautiful packaging</span></div></div>
@@ -305,12 +313,12 @@
   <div class="story-media" data-aos="fade-right"><div class="arm"><img src="{% static 'images/w3.jpg' %}" alt=""></div></div>
   <div class="story-copy" data-aos="fade-down">
     <div class="eyebrow-line" ><span class="eyebrow">Our Story</span></div>
-    <h2>Crafted to Express Who You Are</h2>
-    <p>Every bracelet is carefully handcrafted with premium beads and threads to bring elegance, positivity and confidence into your everyday style.</p>
+    <h2>Curated to Express Who You Are</h2>
+    <p>Every piece in our collection is carefully selected from top accessory brands, bringing together premium quality, timeless design, and positive energy — so you can wear your story with confidence.</p>
     <div class="story-points">
-      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>Unique Designs</div>
-      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Positive Energy</div>
-      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2 4.8 5.4 4.1 7.6 3.6 10 4.7 12 7c2-2.3 4.4-3.4 6.6-2.9C22 4.8 23.3 8.4 21.5 12 19 16.4 12 21 12 21Z"/></svg>Made with Love</div>
+      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>Curated Collections</div>
+      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Premium Brands</div>
+      <div class="story-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2 4.8 5.4 4.1 7.6 3.6 10 4.7 12 7c2-2.3 4.4-3.4 6.6-2.9C22 4.8 23.3 8.4 21.5 12 19 16.4 12 21 12 21Z"/></svg>Made for Love</div>
     </div>
     <a href="{% url 'about' %}" class="btn btn-outline"  data-aos="fade-down" data-aos-delay="100">Learn More About Us</a>
   </div>

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -116,6 +117,9 @@
             top: 0;
             background: var(--bg-card);
             z-index: 1;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
         }
         
         .admin-brand h1 {
@@ -890,6 +894,7 @@
         <!-- Sidebar -->
         <aside class="admin-sidebar" id="adminSidebar">
             <div class="admin-brand">
+                <img src="{% static '/images/wristhaus_logo.png' %}" alt="" style="max-width: 40%;">
                 <h1>Wristhaus</h1>
                 <span>Admin Panel</span>
             </div>
