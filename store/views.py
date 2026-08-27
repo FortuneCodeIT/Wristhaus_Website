@@ -375,14 +375,21 @@ def checkout_to_whatsapp(request):
         whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
         logger.info(f"Redirecting to: {whatsapp_url[:50]}...")
         
-        return redirect(whatsapp_url)
+        cart_items.delete()
         
+        messages.success(request, '✅ Your order has been placed! Cart cleared')
+        
+        return redirect(whatsapp_url)
+         
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         import traceback
         traceback.print_exc()
         messages.error(request, 'An error occurred. Please try again.')
         return redirect('cart_page')
+
+
+
 
 # NEW: Update cart item quantity (for cart page)
 def update_cart_quantity(request):
