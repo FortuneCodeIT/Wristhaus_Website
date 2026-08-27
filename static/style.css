@@ -275,7 +275,7 @@ header.site {
     font-family: var(--display);
     font-size: 22px;
     letter-spacing: .08em;
-    color: var(--olive);
+    color: var(--gold);
     line-height: 1;
     text-transform: uppercase;
 }
@@ -1449,13 +1449,181 @@ footer.site {
     color: #dc3545;
 }
 
-.price-range {
+
+
+/* Search Bar */
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+.search-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.6rem 2.5rem 0.6rem 1rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-1);
+    color: var(--cream-deep);
+    font-size: 0.9rem;
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.search-input::placeholder {
+    color: var(--cream-muted);
+}
+
+.search-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--cream-muted);
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.3s;
+}
+
+.search-btn:hover {
+    color: var(--gold);
+}
+
+.clear-search {
+    position: absolute;
+    right: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cream-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 4px;
+}
+
+.clear-search:hover {
+    color: var(--danger);
+}
+
+.price-filter {
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.price-filter-header {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
-    color: var(--ink-soft);
-    margin-top: 8px;
+    align-items: center;
+    margin-bottom: 1rem;
 }
+
+.price-filter-header span {
+    color: var(--cream-deep);
+    font-weight: 500;
+}
+
+.price-values {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--cream-muted);
+    font-size: 0.9rem;
+}
+
+.price-values span {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.price-slider-wrapper {
+    position: relative;
+    height: 30px;
+    margin: 0 10px;
+}
+
+.price-slider {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: transparent;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.price-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    pointer-events: auto;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.price-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    pointer-events: auto;
+    border: 2px solid var(--bg);
+}
+
+.price-slider-track {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: var(--gold-dark);
+    border-radius: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.price-slider-track::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    left: var(--min-percent, 0%);
+    right: var(--max-percent, 0%);
+}
+
+.price-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+}
+
+
 
 .view-collections-btn {
     display: inline-flex;
@@ -1836,11 +2004,14 @@ footer.site {
     display: grid;
     grid-template-columns: 1fr 1fr;
     align-items: center;
+    padding: 40px;
+    /* margin: 0 auto; */
+    gap: 60px;
 }
 
-.about-hero .copy {
+/* .about-hero .copy {
     padding: 64px;
-}
+} */
 
 .about-hero .media {
     aspect-ratio: 4/3.6;
@@ -2568,6 +2739,9 @@ footer.site {
    RESPONSIVE - MEDIUM SCREENS (768px - 1023px)
 =========================================================== */
 @media (max-width: 1023px) {
+    .wrap {
+        padding: 20px 20px;
+    }
     nav.main {
         display: none;
     }
@@ -2710,7 +2884,7 @@ nav.main-mobile ul a li {
 .nav-header .logo-text {
     font-family: var(--display);
     font-size: 22px;
-    color: var(--olive);
+    color: var(--gold);
     text-transform: uppercase;
 }
 
@@ -2752,7 +2926,6 @@ nav.main-mobile ul a li {
     top: 12px;
 }
     .hero {
-        flex-direction: column;
         height: auto;
         padding: 40px 20px;
         gap: 30px;
@@ -2770,16 +2943,16 @@ nav.main-mobile ul a li {
         margin: 16px auto 24px;
     }
     .hero-actions {
-        justify-content: center;
+        justify-content: flex-start;
     }
     .hero-badges {
-        justify-content: center;
+        justify-content: flex-start;
         gap: 20px;
     }
     .hero img {
     display: block;
     max-width: 150px;
-    max-height: 150px;
+    /* max-height: 150px; */
     right: 40px;
     top: 20px;
 }
@@ -2895,11 +3068,12 @@ nav.main-mobile ul a li {
         text-align: center;
     }
     .about-hero {
-        grid-template-columns: 1fr;
-    }
-    .about-hero .copy {
+        grid-template-columns: 1fr 1fr;
         padding: 40px 20px;
     }
+    /* .about-hero .copy {
+        padding: 40px 20px;
+    } */
     .story-block {
         grid-template-columns: 1fr;
         gap: 30px;
@@ -2996,6 +3170,10 @@ nav.main-mobile ul a li {
         padding: 0.3rem 0.8rem;
         font-size: 12px;
     }
+
+    .admin-link {
+        display: none;
+    }
 }
 
 /* ===========================================================
@@ -3019,7 +3197,8 @@ nav.main-mobile ul a li {
         gap: 12px;
     }
     .hero {
-        padding: 30px 16px;
+        padding: 30px 0;
+        flex-direction: column;
     }
     .hero-copy h1 {
         font-size: 30px;
@@ -3242,9 +3421,12 @@ nav.main-mobile ul a li {
         padding: 0.3rem 0.8rem;
         font-size: 0.75rem;
     }
-    .about-hero .copy {
-        padding: 30px 16px;
+    .about-hero {
+        grid-template-columns: 1fr ;
     }
+    /* .about-hero .copy {
+        padding: 30px 16px;
+    } */
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
         gap: 0;
@@ -3258,6 +3440,7 @@ nav.main-mobile ul a li {
     .stat span {
         font-size: 10px;
     }
+    
     .story {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -3532,7 +3715,7 @@ nav.main-mobile ul a li {
         height: 80px;
     }
     .perks {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
     .perk {
         border-right: none;

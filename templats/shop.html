@@ -20,6 +20,75 @@
     display: none;
   }
  
+
+ 
+
+/* Responsive Search */
+@media (max-width: 768px) {
+    .search-container {
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .search-wrapper {
+        height: 44px;
+    }
+    
+    .search-input.active {
+        padding: 0 12px;
+        font-size: 0.85rem;
+    }
+    
+    .search-toggle {
+        padding: 0 12px;
+        font-size: 1rem;
+        min-width: 40px;
+    }
+    
+    .search-submit {
+        padding: 0 15px;
+        font-size: 0.8rem;
+    }
+    
+    .search-submit span {
+        display: none;
+    }
+        }
+    
+    .price-filter-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .price-filter-actions {
+        flex-direction: column;
+    }
+    
+    .price-filter-actions .btn {
+        width: 100%;
+        justify-content: center;
+    
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .search-wrapper {
+        height: 40px;
+        border-radius: 25px;
+    }
+    
+    .search-toggle {
+        padding: 0 10px;
+        font-size: 0.9rem;
+        min-width: 36px;
+    }
+    
+    .search-input.active {
+        padding: 0 10px;
+        font-size: 0.8rem;
+    }
+}
 </style>
 <body>
 
@@ -47,6 +116,11 @@
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
+             {% if user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
+        {% endif %}
+
+
     </nav>
 
     <!-- Mobile Navigation Sidebar -->
@@ -74,14 +148,7 @@
     </nav>
 
     <!-- Nav Icons -->
-    <div class="nav-icons">
-      <button class="search" aria-label="Search">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="11" cy="11" r="7"/>
-          <path d="m21 21-4.3-4.3"/>
-        </svg>
-      </button>
-      
+    <div class="nav-icons">   
       <a href="{% url 'cart_page' %}" aria-label="Cart">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
           <path d="M6 6h15l-1.5 9h-12z"/>
@@ -93,7 +160,7 @@
       </a>
 
       <!-- Admin Link (Desktop) -->
-      {% if user.is_authenticated and user.is_superuser %}
+      <!-- {% if user.is_authenticated and user.is_superuser %}
       <a href="{% url 'admin_dashboard' %}" class="admin-link" style=" color: var(--gold);
         font-size: 13px;
         letter-spacing: .08em;
@@ -106,7 +173,7 @@
         margin-left: 10px;">
         <i class="fas fa-cog"></i> Admin
       </a>
-      {% endif %}
+      {% endif %} -->
 
       <!-- Hamburger Button -->
         <div class="bar-wrapper" id="openNav">
@@ -134,9 +201,39 @@
 
 <section class="section" data-aos="fade-up" data-aos-delay="200">
   <div class="wrap shop-layout">
-
     <aside class="filters">
+      
       <h4>Category</h4>
+      
+       <!-- Search Form -->
+            <form method="GET" action="{% url 'shop' %}" class="search-form">
+                <div class="search-wrapper">
+                    <input type="text" 
+                           name="search" 
+                           class="search-input" 
+                           placeholder="Search products..." 
+                           value="{{ search_query }}">
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    {% if search_query %}
+                        <a href="{% url 'shop' %}" class="clear-search">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    {% endif %}
+                </div>
+                <!-- Preserve other filters -->
+                {% if active_category != 'all' %}
+                    <input type="hidden" name="category" value="{{ active_category }}">
+                {% endif %}
+                {% if min_price %}
+                    <input type="hidden" name="min_price" value="{{ min_price }}">
+                {% endif %}
+                {% if max_price %}
+                    <input type="hidden" name="max_price" value="{{ max_price }}">
+                {% endif %}
+            </form>
+
       <div class="filter-group">
         <ul>
                 <!-- Category Filter Buttons -->
@@ -186,25 +283,47 @@
 
       </div>
 
-      <!-- <h4>Price</h4>
+      <h4>Price Range</h4>
       <div class="filter-group">
-        <input type="range" min="10" max="200" value="120" style="width:100%;accent-color:var(--gold);">
-        <div class="price-range"><span>$10</span><span>$200</span></div>
+             <!-- Price Range Filter -->
+        <div class="price-filter" data-aos="fade-up" data-aos-delay="200">
+            <div class="price-filter-header">
+                <div class="price-values">
+                    <span>₦<span id="min-price-display">{{ min_price|default:min_product_price }}</span></span>
+                    <span>to</span>
+                    <span>₦<span id="max-price-display">{{ max_price|default:max_product_price }}</span></span>
+                </div>
+            </div>
+            <div class="price-slider-wrapper">
+                <input type="range" 
+                       id="price-min" 
+                       class="price-slider" 
+                       min="{{ min_product_price }}" 
+                       max="{{ max_product_price }}" 
+                       value="{{ min_price|default:min_product_price }}">
+                <input type="range" 
+                       id="price-max" 
+                       class="price-slider" 
+                       min="{{ min_product_price }}" 
+                       max="{{ max_product_price }}" 
+                       value="{{ max_price|default:max_product_price }}">
+                <div class="price-slider-track"></div>
+            </div>
+            <div class="price-filter-actions">
+                <button id="apply-price-filter" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter"></i> Apply Filter
+                </button>
+                <a href="{% url 'shop' %}{% if search_query %}?search={{ search_query }}{% endif %}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-undo"></i> Reset
+                </a>
+            </div>
+        </div>
       </div>
-      <button class="btn btn-outline btn-full">Apply Filters</button> -->
     </aside>
 
     <div>
-      <!-- <div class="shop-toolbar">
-        <span>Showing 1–10 of 42 results</span>
-        <select class="select">
-          <option>Sort: Featured</option>
-          <option>Price: Low to High</option>
-          <option>Price: High to Low</option>
-          <option>Newest</option>
-          <option>Best Rated</option>
-        </select>
-      </div> -->
+
+
 
      <div class="grid-5" >
 
@@ -259,6 +378,14 @@
         </div>
         </div>
 
+            {% empty %}
+          <div class="no-products" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+              <i class="fas fa-search" style="font-size: 3rem; color: var(--gold);"></i>
+              <h3 style="margin-top: 1rem; color: var(--cream-deep);">No products found</h3>
+              <p style="color: var(--cream-muted);">Try adjusting your search or filter criteria</p>
+              <a href="{% url 'shop' %}" class="btn btn-primary" style="margin-top: 1rem;">View All Products</a>
+          </div>
+
         {% endfor %}
 
     
@@ -289,7 +416,7 @@
         <a href="#" aria-label="Next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></a>
       </div>
     </div> -->
-
+    </div>
   </div>
 </section>
 
@@ -490,83 +617,111 @@ $(document).ready(function() {
 
 
 
-    const allProduct = document.getElementById('all');
-    const watchProduct = document.getElementById('watch');
-    const braceletProduct = document.getElementById('bracelet');
-    const smartProduct = document.getElementById('smart');
-    const comboProduct = document.getElementById('combo');
-
-    allProduct.addEventListener('click', () => {
-        allProduct.classList.add('active');
-        watchProduct.classList.remove('active');
-        braceletProduct.classList.remove('active');
-        smartProduct.classList.remove('active');
-        comboProduct.classList.remove('active')
-
-         document.querySelectorAll('.card').forEach(card => {
-            card.classList.remove('hidden');
+document.addEventListener('DOMContentLoaded', function() {
+  
+    // ===========================================================
+    // PRICE RANGE SLIDER
+    // ===========================================================
+    const minSlider = document.getElementById('price-min');
+    const maxSlider = document.getElementById('price-max');
+    const minDisplay = document.getElementById('min-price-display');
+    const maxDisplay = document.getElementById('max-price-display');
+    const applyBtn = document.getElementById('apply-price-filter');
+    
+    if (minSlider && maxSlider) {
+        function updatePriceDisplay() {
+            const minVal = parseInt(minSlider.value);
+            const maxVal = parseInt(maxSlider.value);
+            
+            minDisplay.textContent = minVal;
+            maxDisplay.textContent = maxVal;
+            
+            const minPercent = ((minVal - minSlider.min) / (minSlider.max - minSlider.min)) * 100;
+            const maxPercent = ((maxVal - maxSlider.min) / (maxSlider.max - maxSlider.min)) * 100;
+            
+            document.querySelector('.price-slider-track').style.setProperty('--min-percent', minPercent + '%');
+            document.querySelector('.price-slider-track').style.setProperty('--max-percent', (100 - maxPercent) + '%');
+        }
+        
+        minSlider.addEventListener('input', function() {
+            if (parseInt(this.value) > parseInt(maxSlider.value)) {
+                this.value = maxSlider.value;
+            }
+            updatePriceDisplay();
+        });
+        
+        maxSlider.addEventListener('input', function() {
+            if (parseInt(this.value) < parseInt(minSlider.value)) {
+                this.value = minSlider.value;
+            }
+            updatePriceDisplay();
+        });
+        
+        applyBtn.addEventListener('click', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('min_price', minSlider.value);
+            url.searchParams.set('max_price', maxSlider.value);
+            window.location.href = url.toString();
+        });
+        
+        updatePriceDisplay();
+    }
+    
+    // ===========================================================
+    // ADD TO CART FUNCTIONALITY
+    // ===========================================================
+    $('.add-to-cart-btn, .buy-now-btn').click(function(e) {
+        e.preventDefault();
+        
+        const productId = $(this).data('product-id');
+        const isBuyNow = $(this).hasClass('buy-now-btn');
+        const $button = $(this);
+        
+        if (!productId) {
+            alert('Error: Product ID not found');
+            return;
+        }
+        
+        $button.prop('disabled', true);
+        $button.html('<i class="fas fa-spinner fa-spin"></i> Adding...');
+        
+        $.ajax({
+            url: "{% url 'add_to_cart' %}",
+            method: 'POST',
+            data: JSON.stringify({
+                product_id: parseInt(productId),
+                quantity: 1
+            }),
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    $('.cart-count').text(response.cart_count);
+                    alert(response.message);
+                    
+                    if (isBuyNow) {
+                        window.location.href = "{% url 'cart_page' %}";
+                    }
+                } else {
+                    alert('Error: ' + response.error);
+                }
+                $button.prop('disabled', false);
+                $button.html(isBuyNow ? '<i class="fas fa-bolt"></i> Buy Now' : '<i class="fas fa-cart-plus"></i> Add to Cart');
+            },
+            error: function(xhr) {
+                console.error('Error:', xhr);
+                alert('An error occurred. Please try again.');
+                $button.prop('disabled', false);
+                $button.html(isBuyNow ? '<i class="fas fa-bolt"></i> Buy Now' : '<i class="fas fa-cart-plus"></i> Add to Cart');
+            }
         });
     });
+});
 
-    watchProduct.addEventListener('click', () => {
-        watchProduct.classList.add('active');
-        allProduct.classList.remove('active');
-        braceletProduct.classList.remove('active');
-        smartProduct.classList.remove('active');
-        comboProduct.classList.remove('active')
 
-         document.querySelectorAll('.card').forEach(card => {
-            card.classList.add('hidden');
-        });
-         document.querySelectorAll('.watch-product').forEach(card => {
-            card.classList.remove('hidden');
-        });
-    });
-
-    braceletProduct.addEventListener('click', () => {
-        braceletProduct.classList.add('active');
-        allProduct.classList.remove('active');
-        watchProduct.classList.remove('active');
-        smartProduct.classList.remove('active');
-        comboProduct.classList.remove('active')
-
-         document.querySelectorAll('.card').forEach(card => {
-            card.classList.add('hidden');
-        });
-         document.querySelectorAll('.bracelet-product').forEach(card => {
-            card.classList.remove('hidden');
-        });
-    });
-
-    smartProduct.addEventListener('click', () => {
-        smartProduct.classList.add('active');
-        allProduct.classList.remove('active');
-        watchProduct.classList.remove('active');
-        braceletProduct.classList.remove('active');
-        comboProduct.classList.remove('active')
-
-         document.querySelectorAll('.card').forEach(card => {
-            card.classList.add('hidden');
-        });
-         document.querySelectorAll('.smart-product').forEach(card => {
-            card.classList.remove('hidden');
-        });
-    });
-
-    comboProduct.addEventListener('click', () => {
-        comboProduct.classList.add('active');
-        allProduct.classList.remove('active');
-        watchProduct.classList.remove('active');
-        braceletProduct.classList.remove('active');
-        smartProduct.classList.remove('active')
-
-         document.querySelectorAll('.card').forEach(card => {
-            card.classList.add('hidden');
-        });
-         document.querySelectorAll('.combo-product').forEach(card => {
-            card.classList.remove('hidden');
-        });
-    });
 
 
 

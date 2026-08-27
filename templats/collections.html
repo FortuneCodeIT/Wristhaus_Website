@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{% static 'style.css' %}">
     
     <!-- Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Petit+Formal+Script&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
 
@@ -37,6 +38,9 @@
       <a href="{% url 'collections' %}" class="active">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
+             {% if user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
+        {% endif %}
     </nav>
 
     <!-- Mobile Navigation Sidebar -->
@@ -49,11 +53,11 @@
         </div>
       </div>
       <ul>
-        <li><a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="{% url 'index' %}" class="active"><i class="fas fa-home"></i> Home</a></li>
         <li><a href="{% url 'shop' %}"><i class="fas fa-store"></i> Shop</a></li>
         <li><a href="{% url 'collections' %}" class="active"><i class="fas fa-layer-group"></i> Collections</a></li>
         <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
-        <li><a href="{% url 'contact' %}" ><i class="fas fa-envelope"></i> Contact</a></li>
+        <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
         {% if user.is_authenticated and user.is_superuser %}
         <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
         {% endif %}
@@ -65,13 +69,6 @@
 
     <!-- Nav Icons -->
     <div class="nav-icons">
-      <button class="search" aria-label="Search">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="11" cy="11" r="7"/>
-          <path d="m21 21-4.3-4.3"/>
-        </svg>
-      </button>
-      
       <a href="{% url 'cart_page' %}" aria-label="Cart">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
           <path d="M6 6h15l-1.5 9h-12z"/>
@@ -83,7 +80,7 @@
       </a>
 
       <!-- Admin Link (Desktop) -->
-      {% if user.is_authenticated and user.is_superuser %}
+      <!-- {% if user.is_authenticated and user.is_superuser %}
       <a href="{% url 'admin_dashboard' %}" class="admin-link" style=" color: var(--gold);
         font-size: 13px;
         letter-spacing: .08em;
@@ -96,7 +93,7 @@
         margin-left: 10px;">
         <i class="fas fa-cog"></i> Admin
       </a>
-      {% endif %}
+      {% endif %} -->
 
       <!-- Hamburger Button -->
         <div class="bar-wrapper" id="openNav">

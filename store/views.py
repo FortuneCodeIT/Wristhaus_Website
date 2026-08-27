@@ -1,6 +1,8 @@
+from django.db import models 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib import messages
@@ -69,10 +71,35 @@ def index(request):
 # Your existing shop view
 def shop(request):
     category_filter = request.GET.get('category', 'all')
+    search_query = request.GET.get('search', '')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    
+     # Start with all products
     shop_alls = Shop_All.objects.all().order_by('-created_at')
     
     if category_filter and category_filter != 'all':
         shop_alls = shop_alls.filter(category=category_filter)
+              
+        # Apply search filter
+    if search_query:
+        shop_alls = shop_alls.filter(
+            Q(name__icontains=search_query) | 
+            Q(description__icontains=search_query) |
+            Q(category__icontains=search_query)
+        )
+    
+    # Apply price range filter
+    if min_price:
+        shop_alls = shop_alls.filter(price__gte=min_price)
+    if max_price:
+        shop_alls = shop_alls.filter(price__lte=max_price)
+    
+    all_products = Shop_All.objects.all()
+    min_product_price = all_products.aggregate(models.Min('price'))['price__min'] or 0
+    max_product_price = all_products.aggregate(models.Max('price'))['price__max'] or 100000
+    
+
     
     paginator = Paginator(shop_alls, 12)
     page = request.GET.get('page')
@@ -94,6 +121,12 @@ def shop(request):
         'active_category': category_filter or 'all',
         'cart_count': cart_count,
         'now': timezone.now(),
+        'search_query': search_query,
+        'min_price': min_price or min_product_price,
+        'max_price': max_price or max_product_price,
+        'min_product_price': int(min_product_price),
+        'max_product_price': int(max_product_price),
+        'has_filters': bool(search_query or min_price or max_price or category_filter != 'all'),
     }
     
     return render(request, 'shop.html', context)
@@ -280,7 +313,9 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
         message += f"  • {item.product.name} x{item.quantity} = ₦{item.get_total_price()}\n"
     
     message += f"\n📍 *Total: ₦{total_price}*\n\n"
+    message += "✅ *Please reply with your delivery address.*\n"
     message += "📞 *We'll confirm your order immediately.*\n"
+    message += "🛡️ *Secure payment on delivery.*\n\n"
     message += "_Thank you for shopping at Wristhaus!_ 🙏"
     
     return message
@@ -392,13 +427,33 @@ def product_detail(request, product_id):
 # NEW: Collection page view
 def collections(request):
     """Display all products organized by category"""
+    search_query = request.GET.get('search', '')
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    
+    
+        
+            # Apply search filter
+    if search_query:
+        shop_alls = shop_alls.filter(
+            Q(name__icontains=search_query) | 
+            Q(description__icontains=search_query) |
+            Q(category__icontains=search_query)
+        )
+    
+
+    
+   
     cart = get_or_create_cart(request)
     cart_count = cart.get_total_items()
+
     
     # Get all categories with their products
     categories = []
     for category_code, category_name in Shop_All.CATEGORY_CHOICES:
         products = Shop_All.objects.filter(category=category_code).order_by('-created_at')
+        min_product_price = products.aggregate(models.Min('price'))['price__min'] or 0
+        max_product_price = products.aggregate(models.Max('price'))['price__max'] or 100000
         if products.exists():  # Only show categories that have products
             categories.append({
                 'code': category_code,
@@ -410,15 +465,33 @@ def collections(request):
     context = {
         'categories': categories,
         'cart_count': cart_count,
-    }
+        'search_query': search_query,
+        'min_price': min_price or min_product_price,
+        'max_price': max_price or max_product_price,
+}
+
+    
     
     return render(request, 'collections.html', context)
 
 def about(request):
-    return render(request, 'about_us.html')
+        
+    cart = get_or_create_cart(request)
+    cart_count = cart.get_total_items()
+    
+    context = {
+       'cart_count': cart_count
+    }
+    return render(request, 'about_us.html', context)
 
 def contact(request):
-    return render(request, 'contact.html')
+    cart = get_or_create_cart(request)
+    cart_count = cart.get_total_items()
+
+    context = {
+       'cart_count': cart_count
+    }
+    return render(request, 'contact.html', context)
 
 
 
