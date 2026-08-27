@@ -2748,7 +2748,9 @@ footer.site {
     .nav-toggle {
         display: block;
     }
-
+    .nav-icons {
+        gap: 20px;
+    }
     .nav-row {
         padding: 15px 20px;
     }
@@ -2902,7 +2904,7 @@ nav.main-mobile ul a li {
     position: relative;
 }
 .bar {
-    width: 20px;
+    width: 30px;
     height: 2px;
     background-color: #fff;
     cursor: pointer;
@@ -2920,7 +2922,7 @@ nav.main-mobile ul a li {
     transform: rotate(-45deg) translate(6px, -6px);
 }
 .bar:nth-child(3) {
-    width: 15px;
+    width: 20px;
     position:absolute;
     right: 0;
     top: 12px;
@@ -3192,9 +3194,6 @@ nav.main-mobile ul a li {
     }
     .logo .sub {
         font-size: 7px;
-    }
-    .nav-icons {
-        gap: 12px;
     }
     .hero {
         padding: 30px 0;
@@ -3744,14 +3743,11 @@ nav.main-mobile ul a li {
     .stat span {
         font-size: 9px;
     }
-    .nav-row {
-        padding: 10px 12px;
-    }
+    /* .nav-row {
+        padding: 10px 20px;
+    } */
     .logo .word {
         font-size: 16px;
-    }
-    .nav-icons {
-        gap: 10px;
     }
     .cart-count {
         font-size: 8px;
