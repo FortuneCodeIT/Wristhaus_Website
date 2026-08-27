@@ -1,3 +1,4 @@
+
 from django.db import models 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
@@ -6,13 +7,13 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib import messages
-from django.db import transaction
+from django.db import transaction, IntegrityError, OperationalError
 from django.views.decorators.http import require_POST
 from .models import Home_Collection, Shop_All, Cart, CartItem, ClientReview
 from .forms import ProductForm, ReviewForm, AdminProfileForm, AdminPasswordChangeForm  # We'll create this
 from django.utils import timezone
 import urllib.parse
-
+import time 
 import json
 import logging
 
@@ -131,79 +132,81 @@ def shop(request):
     
     return render(request, 'shop.html', context)
 
-
-# UPDATED: Add to cart with stock check
 def add_to_cart(request):
+    """Add product to cart - updates quantity if exists"""
     logger.info("=== ADD TO CART REQUEST RECEIVED ===")
     
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        quantity = int(data.get('quantity', 1))
+        
+        logger.info(f"Product ID: {product_id}, Quantity: {quantity}")
+       
+        if not product_id:
+            return JsonResponse({'success': False, 'error': 'Product ID required'})
+        
+        product = get_object_or_404(Shop_All, id=product_id)
+        
+        if product.stock < quantity:
+            return JsonResponse({
+                'success': False, 
+                'error': f'Sorry, only {product.stock} items available in stock.',
+            })
+        
+        cart = get_or_create_cart(request)
+        
+        # ✅ FIX: Try to get existing item, update if found
         try:
-            # Get product ID and quantity
-            data = json.loads(request.body)
-            product_id = data.get('product_id')
-            quantity = int(data.get('quantity', 1))
-            
-            logger.info(f"Product ID: {product_id}, Quantity: {quantity}")
-            
-            if not product_id:
-                return JsonResponse({'success': False, 'error': 'Product ID required'})
-            
-            # Get product and check stock
-            product = get_object_or_404(Shop_All, id=product_id)
-            
-            # Check if enough stock
-            if product.stock < quantity:
-                return JsonResponse({
-                    'success': False, 
-                    'error': f'Sorry, only {product.stock} items available in stock.'
-                })
-            
-            # Get or create cart
-            cart = get_or_create_cart(request)
-            
-            # Check if product already in cart
-            cart_item, created = CartItem.objects.get_or_create(
-                cart=cart,
-                product=product,
-                defaults={'quantity': 0}  # Start with 0, we'll add below
-            )
-            
+            # Try to get existing cart item
+            cart_item = CartItem.objects.get(cart=cart, product=product)
+           
             # Calculate new quantity
             new_quantity = cart_item.quantity + quantity
             
-            # Check if total quantity exceeds stock
-            if new_quantity > product.stock:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Cannot add more. Only {product.stock} items available in stock.'
-                })
+            # if new_quantity > product.stock:
+            #     return JsonResponse({
+            #         'success': False,
+            #         'error': f'Cannot add more. Only {product.stock} items available.'
+            #     })
             
-            # Update cart item quantity
+            # Update existing item
             cart_item.quantity = new_quantity
             cart_item.save()
+            logger.info(f"Updated existing item. New quantity: {cart_item.quantity}")
             
-            # REDUCE STOCK IMMEDIATELY
-            product.stock -= quantity
-            product.save()
-            
-            logger.info(f"Stock reduced. New stock: {product.stock}")
-            
-            cart_count = cart.get_total_items()
-            
-            return JsonResponse({
-                'success': True,
-                'cart_count': cart_count,
-                'message': f'{product.name} added to cart! ({quantity} item(s))',
-                'remaining_stock': product.stock
-            })
-            
-        except Exception as e:
-            logger.error(f"Error: {str(e)}")
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+        except CartItem.DoesNotExist:
+            # Create new itemitems available in stock.'
+            cart_item = CartItem.objects.create(
+                cart=cart,
+                product=product,
+                quantity=quantity
+            )
+            logger.info(f"Created new item. Quantity: {cart_item.quantity}")
+        
+        # Reduce stock
+        product.stock -= quantity
+        product.save()
+        logger.info(f"Stock reduced. New stock: {product.stock}")
+        
+        cart_count = cart.get_total_items()
+        
+        return JsonResponse({
+            'success': True,
+            'cart_count': cart_count,
+            'message': f'{product.name} added to cart! ({quantity} item(s))',
+            'remaining_stock': product.stock
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        logger.error(f"Error: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
 
-# UPDATED: Delete from cart with stock restore
 def delete_from_cart(request):
     if request.method == 'POST':
         try:
@@ -211,27 +214,34 @@ def delete_from_cart(request):
             product_id = data.get('product_id')
             
             cart = get_or_create_cart(request)
-            cart_item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
             
-            # RESTORE STOCK before deleting
-            product = cart_item.product
-            product.stock += cart_item.quantity
+            # ✅ FIX: Get all items for this product
+            cart_items = CartItem.objects.filter(cart=cart, product_id=product_id)
+            
+            if not cart_items.exists():
+                return JsonResponse({'success': False, 'error': 'Item not found in cart'})
+            
+            # ✅ FIX: Calculate total quantity to restore
+            total_quantity = sum(item.quantity for item in cart_items)
+            product = cart_items.first().product
+            
+            # ✅ FIX: Restore stock ONCE for total quantity
+            product.stock += total_quantity
             product.save()
             
-            logger.info(f"Stock restored. New stock for {product.name}: {product.stock}")
+            logger.info(f"Restored {total_quantity} items. New stock: {product.stock}")
             
-            cart_item.delete()
+            # ✅ FIX: Delete all items for this product
+            cart_items.delete()
             
             cart_count = cart.get_total_items()
             
             return JsonResponse({
                 'success': True,
                 'cart_count': cart_count,
-                'message': 'Item removed from cart! Stock restored.'
+                'message': f'Removed {total_quantity} item(s) from cart! Stock restored.'
             })
             
-        except CartItem.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Item not found in cart'})
         except Exception as e:
             logger.error(f"Error: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)})
@@ -249,7 +259,7 @@ def cart_page(request):
     cart_count = cart.get_total_items()
     total_price = cart.get_total_price()
     
-    whatsapp_message = generate_whatsapp_message(cart_items, total_price, request)
+    whatsapp_message = generate_whatsapp_message(cart_items, total_price)
     
     context = {
         'cart_items': cart_items,
@@ -261,6 +271,7 @@ def cart_page(request):
     return render(request, 'cart.html', context)
 
 def generate_whatsapp_message(cart_items, total_price, request=None):
+    """Generate WhatsApp order message with image previews"""
     if not cart_items:
         return "Your cart is empty."
     
@@ -269,32 +280,30 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
     if request:
         base_url = request.build_absolute_uri('/').rstrip('/')
     
-    # If request is None, use your deployed URL
     if not base_url:
         base_url = "https://wristhaus-website.onrender.com"
     
-    # START with image URLs (WhatsApp will show previews at top)
+    # Start with image URLs at the top for WhatsApp previews
     message = ""
     
-    # Add ALL image URLs at the VERY TOP for WhatsApp previews
+    # Add all image URLs at the VERY TOP
     for item in cart_items:
         product = item.product
         if product.image:
-            # Build the full image URL
             if product.image.url.startswith('http'):
                 image_url = product.image.url
             else:
                 image_url = base_url + product.image.url
-            
-            message += f"{image_url}\n"  # Just the URL, no emoji
+            message += f"{image_url}\n"
     
     # Add spacing after images
     message += "\n" * 2
     
-    # Now add the order details
+    # Order header
     message += "🛍️ *WRISTHAUS - NEW ORDER* 🛍️\n"
     message += "═" * 35 + "\n\n"
     
+    # Add each item
     for i, item in enumerate(cart_items, 1):
         product = item.product
         subtotal = item.get_total_price()
@@ -304,15 +313,19 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
         message += f"📦 Quantity: {item.quantity}\n"
         message += f"💵 Subtotal: ₦{subtotal}\n\n"
     
+    # Add total
     message += "═" * 35 + "\n"
     message += f"💰 *TOTAL: ₦{total_price}*\n"
     message += "═" * 35 + "\n\n"
     
+    # Order summary
     message += "📋 *Order Summary:*\n"
     for item in cart_items:
         message += f"  • {item.product.name} x{item.quantity} = ₦{item.get_total_price()}\n"
     
     message += f"\n📍 *Total: ₦{total_price}*\n\n"
+    
+    # Footer
     message += "✅ *Please reply with your delivery address.*\n"
     message += "📞 *We'll confirm your order immediately.*\n"
     message += "🛡️ *Secure payment on delivery.*\n\n"
@@ -321,87 +334,118 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
     return message
 
 # UPDATED: Checkout with stock validation
+
 def checkout_to_whatsapp(request):
-    cart = get_or_create_cart(request)
-    cart_items = cart.items.all()
-    total_price = cart.get_total_price()
+    """Checkout and redirect to WhatsApp"""
+    logger.info("=== CHECKOUT STARTED ===")
     
-    if not cart_items:
-        messages.warning(request, 'Your cart is empty.')
+    try:
+        cart = get_or_create_cart(request)
+        cart_items = cart.items.all()
+        total_price = cart.get_total_price()
+        
+        logger.info(f"Cart items: {cart_items.count()}")
+        
+        if not cart_items:
+            logger.warning("Empty cart")
+            messages.warning(request, 'Your cart is empty.')
+            return redirect('cart_page')
+        
+        # Check stock
+        with transaction.atomic():
+            for item in cart_items:
+                if item.product.stock < item.quantity:
+                    logger.warning(f"Stock issue: {item.product.name}")
+                    messages.error(
+                        request, 
+                        f'Sorry, "{item.product.name}" is out of stock. Only {item.product.stock} available.'
+                    )
+                    return redirect('cart_page')
+        
+        # Generate message
+        message = generate_whatsapp_message(cart_items, total_price, request)
+        logger.info(f"Message generated: {len(message)} chars")
+        
+        # Encode
+        encoded_message = urllib.parse.quote(message)
+        logger.info("Message encoded")
+        
+        # WhatsApp URL
+        phone_number = "2347030816894"
+        whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
+        logger.info(f"Redirecting to: {whatsapp_url[:50]}...")
+        
+        return redirect(whatsapp_url)
+        
+    except Exception as e:
+        logger.error(f"Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, 'An error occurred. Please try again.')
         return redirect('cart_page')
-    
-    # Check if all items are still in stock
-    with transaction.atomic():
-        for item in cart_items:
-            if item.product.stock < item.quantity:
-                messages.error(
-                    request, 
-                    f'Sorry, "{item.product.name}" is out of stock. Only {item.product.stock} available.'
-                )
-                return redirect('cart_page')
-            
-
-    
-    message = generate_whatsapp_message(cart_items, total_price, request)
-        # Encode message for URL
-    encoded_message = urllib.parse.quote(message)
-    
-    phone_number = "2347030816894"  # CHANGE THIS TO YOUR NUMBER
-        # Build WhatsApp URL
-    whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
-    
-
-    return redirect(whatsapp_url)
 
 # NEW: Update cart item quantity (for cart page)
 def update_cart_quantity(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            product_id = data.get('product_id')
-            action = data.get('action')  # 'increase' or 'decrease'
-            
-            cart = get_or_create_cart(request)
-            cart_item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
-            
-            if action == 'increase':
-                # Check if stock is available
-                if cart_item.product.stock < 1:
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'Not enough stock available.'
-                    })
-                cart_item.quantity += 1
-                cart_item.product.stock -= 1
-                cart_item.product.save()
-                
-            elif action == 'decrease':
-                if cart_item.quantity > 1:
-                    cart_item.quantity -= 1
-                    cart_item.product.stock += 1
-                    cart_item.product.save()
-                else:
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'Minimum quantity is 1'
-                    })
-            
-            cart_item.save()
-            
-            return JsonResponse({
-                'success': True,
-                'quantity': cart_item.quantity,
-                'subtotal': float(cart_item.get_total_price()),
-                'total': float(cart.get_total_price()),
-                'cart_count': cart.get_total_items(),
-                'remaining_stock': cart_item.product.stock
-            })
-            
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+    """Update item quantity in cart"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
     
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
-
+    try:
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        action = data.get('action')
+        
+        if not product_id:
+            return JsonResponse({'success': False, 'error': 'Product ID required'})
+        
+        cart = get_or_create_cart(request)
+        
+        # Get the cart item
+        try:
+            cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
+        except CartItem.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Item not found in cart'})
+        
+        if action == 'increase':
+            # Check if stock is available
+            if cart_item.product.stock < 1:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Not enough stock available.'
+                })
+            cart_item.quantity += 1
+            cart_item.product.stock -= 1
+            cart_item.product.save()
+            
+        elif action == 'decrease':
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+                cart_item.product.stock += 1
+                cart_item.product.save()
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Minimum quantity is 1'
+                })
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid action'})
+        
+        cart_item.save()
+        
+        return JsonResponse({
+            'success': True,
+            'quantity': cart_item.quantity,
+            'subtotal': float(cart_item.get_total_price()),
+            'total': float(cart.get_total_price()),
+            'cart_count': cart.get_total_items(),
+            'remaining_stock': cart_item.product.stock
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        logger.error(f"Error: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
 
 # NEW: Product detail view
 def product_detail(request, product_id):

@@ -14,10 +14,12 @@ urlpatterns = [
     path('collections/', views.collections, name='collections'),
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
-    
+    path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
         # Admin Authentication URLs - NEW
     path('admin/login/', views.admin_login, name='admin_login'),
     path('admin/logout/', views.admin_logout, name='admin_logout'),
+    
+
     
         # Admin Profile URLs - NEW
     path('dashboard/profile/', views.admin_profile, name='admin_profile'),

@@ -378,13 +378,7 @@
         </div>
         </div>
 
-            {% empty %}
-          <div class="no-products" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-              <i class="fas fa-search" style="font-size: 3rem; color: var(--gold);"></i>
-              <h3 style="margin-top: 1rem; color: var(--cream-deep);">No products found</h3>
-              <p style="color: var(--cream-muted);">Try adjusting your search or filter criteria</p>
-              <a href="{% url 'shop' %}" class="btn btn-primary" style="margin-top: 1rem;">View All Products</a>
-          </div>
+
 
         {% endfor %}
 
@@ -667,58 +661,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePriceDisplay();
     }
     
-    // ===========================================================
-    // ADD TO CART FUNCTIONALITY
-    // ===========================================================
-    $('.add-to-cart-btn, .buy-now-btn').click(function(e) {
-        e.preventDefault();
-        
-        const productId = $(this).data('product-id');
-        const isBuyNow = $(this).hasClass('buy-now-btn');
-        const $button = $(this);
-        
-        if (!productId) {
-            alert('Error: Product ID not found');
-            return;
-        }
-        
-        $button.prop('disabled', true);
-        $button.html('<i class="fas fa-spinner fa-spin"></i> Adding...');
-        
-        $.ajax({
-            url: "{% url 'add_to_cart' %}",
-            method: 'POST',
-            data: JSON.stringify({
-                product_id: parseInt(productId),
-                quantity: 1
-            }),
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            },
-            contentType: 'application/json',
-            success: function(response) {
-                if (response.success) {
-                    $('.cart-count').text(response.cart_count);
-                    alert(response.message);
-                    
-                    if (isBuyNow) {
-                        window.location.href = "{% url 'cart_page' %}";
-                    }
-                } else {
-                    alert('Error: ' + response.error);
-                }
-                $button.prop('disabled', false);
-                $button.html(isBuyNow ? '<i class="fas fa-bolt"></i> Buy Now' : '<i class="fas fa-cart-plus"></i> Add to Cart');
-            },
-            error: function(xhr) {
-                console.error('Error:', xhr);
-                alert('An error occurred. Please try again.');
-                $button.prop('disabled', false);
-                $button.html(isBuyNow ? '<i class="fas fa-bolt"></i> Buy Now' : '<i class="fas fa-cart-plus"></i> Add to Cart');
-            }
-        });
-    });
+
 });
 
 

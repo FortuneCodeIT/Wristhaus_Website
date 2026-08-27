@@ -1800,3 +1800,56 @@ nav.main-mobile ul a li {
 }
 
 
+# NEW: Update cart item quantity (for cart page)
+def update_cart_quantity(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            product_id = data.get('product_id')
+            action = data.get('action')  # 'increase' or 'decrease'
+            
+            cart = get_or_create_cart(request)
+            cart_item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+            
+            if action == 'increase':
+                # Check if stock is available
+                if cart_item.product.stock < 1:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Not enough stock available.'
+                    })
+                cart_item.quantity += 1
+                cart_item.product.stock -= 1
+                cart_item.product.save()
+                
+            elif action == 'decrease':
+                if cart_item.quantity > 1:
+                    cart_item.quantity -= 1
+                    cart_item.product.stock += 1
+                    cart_item.product.save()
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Minimum quantity is 1'
+                    })
+            
+            cart_item.save()
+            
+            return JsonResponse({
+                'success': True,
+                'quantity': cart_item.quantity,
+                'subtotal': float(cart_item.get_total_price()),
+                'total': float(cart.get_total_price()),
+                'cart_count': cart.get_total_items(),
+                'remaining_stock': cart_item.product.stock
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+
+
+

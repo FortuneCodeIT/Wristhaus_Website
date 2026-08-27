@@ -68,12 +68,18 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Shop_All, on_delete=models.CASCADE)  # Using Shop_All for shop products
+    product = models.ForeignKey(Shop_All, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
+    
+    class Meta:
+        # This prevents duplicate cart items for the same product
+        unique_together = ('cart', 'product')
     
     def get_total_price(self):
         return self.product.price * self.quantity
     
+    def __str__(self):
+        return f"{self.product.name} x{self.quantity} (Cart {self.cart.id})"
 
 class ClientReview(models.Model):
     RATING_CHOICES = [

@@ -10,15 +10,164 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
     <link rel="stylesheet" href="{% static 'boxicons-2.1.4/boxicons-2.1.4/css/boxicons.min.css' %}">
     
-
-    <title>Document</title>
+    <title>Cart - Wristhaus</title>
 </head>
 <style>
+/* Quantity Controls */
+.cart-item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    flex-wrap: wrap;
+}
 
+.cart-item-quantity label {
+    color: var(--cream-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg-dark);
+    border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-1);
+    overflow: hidden;
+}
+
+.qty-btn {
+    background: none;
+    border: none;
+    color: var(--cream);
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.8rem;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn:hover:not(:disabled) {
+    color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.qty-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.qty-number {
+    color: var(--cream);
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+    font-size: 1rem;
+    padding: 0.2rem 0;
+}
+
+.stock-info {
+    color: var(--cream-muted);
+    font-size: 0.75rem;
+}
+
+.stock-warning {
+    color: #ff9800;
+    font-size: 0.75rem;
+    font-weight: 500;
+    animation: pulse-warning 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Stock Badges */
+.stock-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.stock-badge.in-stock {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.stock-badge.low-stock {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+    animation: pulse-warning 1.5s ease-in-out infinite;
+}
+
+.stock-badge.out-of-stock {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+/* Cart Summary */
+.cart-summary h2 {
+    color: var(--cream-deep);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--gold);
+    font-size: 1.3rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    color: var(--cream-muted);
+    font-size: 0.95rem;
+}
+
+.total-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gold);
+    border-top: 1px solid var(--gold);
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {    
+    .cart-item-quantity {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .quantity-control {
+        gap: 0;
+    }
+    
+    .qty-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+        min-width: 28px;
+    }
+    
+    .qty-number {
+        font-size: 0.85rem;
+        min-width: 25px;
+    }
+}
 </style>
 <body>
-    
-
 
 {% block content %}
 <header class="site">
@@ -38,9 +187,9 @@
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
-             {% if user.is_authenticated and user.is_superuser %}
+      {% if user.is_authenticated and user.is_superuser %}
       <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
-        {% endif %}
+      {% endif %}
     </nav>
 
     <!-- Mobile Navigation Sidebar -->
@@ -49,12 +198,11 @@
         <img src="{% static 'images/wristhaus_logo.png' %}" alt="">
         <div>
           <div class="logo-text">Wristhaus</div>
-          <!-- <div class="logo-sub">Luxury Watches</div> -->
         </div>
       </div>
       <ul>
         <li><a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a></li>
-        <li><a href="{% url 'shop' %}"  class="active"><i class="fas fa-store"></i> Shop</a></li>
+        <li><a href="{% url 'shop' %}" class="active"><i class="fas fa-store"></i> Shop</a></li>
         <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
         <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
         <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
@@ -62,8 +210,7 @@
         <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
         {% endif %}
         <li><a href="{% url 'cart_page' %}">
-            <i class="fas fa-shopping-cart">               
-            </i> Cart <span class="badge">{{ cart_count|default:0 }}</span></a></li>
+            <i class="fas fa-shopping-cart"></i> Cart <span class="badge">{{ cart_count|default:0 }}</span></a></li>
       </ul>
     </nav>
 
@@ -79,29 +226,12 @@
         <span class="cart-count">{{ cart_count|default:0 }}</span>
       </a>
 
-      <!-- Admin Link (Desktop) -->
-      <!-- {% if user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'admin_dashboard' %}" class="admin-link" style=" color: var(--gold);
-        font-size: 13px;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        display: flex;
-        align-items: center;
-        border: 1px solid var(--gold);
-        padding: 5px 10px;
-        border-radius: 6px;
-        margin-left: 10px;">
-        <i class="fas fa-cog"></i> Admin
-      </a>
-      {% endif %} -->
-
       <!-- Hamburger Button -->
-        <div class="bar-wrapper" id="openNav">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </div>
-
+      <div class="bar-wrapper" id="openNav">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
     </div>
   </div>
 
@@ -119,10 +249,11 @@
 <section class="section">
     <div class="wrap">
         {% if cart_items %}
-            <div class="cart-container" >
+            <div class="cart-container">
                 <div class="cart-items">
                     {% for item in cart_items %}
-                        <div class="cart-item" data-product-id="{{ item.product.id }}" data-aos="fade-right" data-product-id="100">
+                        <!-- ✅ FIX: Removed duplicate data-product-id -->
+                        <div class="cart-item" data-product-id="{{ item.product.id }}" data-aos="fade-right">
                             <div class="cart-item-image">
                                 {% if item.product.image %}
                                     <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
@@ -133,15 +264,54 @@
                             <div class="cart-item-details">
                                 <h3>{{ item.product.name }}</h3>
                                 <p class="cart-item-price">₦{{ item.product.price }}</p>
-                                <p class="cart-item-quantity">Quantity: {{ item.quantity }}</p>
-                                <p class="cart-item-subtotal">Subtotal: ₦{{ item.get_total_price }}</p>
+                                
+                                <!-- Stock Status -->
+                                <div class="cart-item-stock">
+                                    {% if item.product.stock <= 0 %}
+                                        <span class="stock-badge out-of-stock">
+                                            <i class="fas fa-times-circle"></i> Out of Stock
+                                        </span>
+                                    {% elif item.product.stock <= 3 %}
+                                        <span class="stock-badge low-stock">
+                                            <i class="fas fa-exclamation-triangle"></i> Only {{ item.product.stock }} left!
+                                        </span>
+                                    {% else %}
+                                        <span class="stock-badge in-stock">
+                                            <i class="fas fa-check-circle"></i> In Stock
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Quantity Controls -->
+                                <div class="cart-item-quantity">
+                                    <label>Quantity:</label>
+                                    <div class="quantity-control">
+                                        <button class="qty-btn qty-minus" data-product-id="{{ item.product.id }}" 
+                                                {% if item.quantity <= 1 %}disabled{% endif %}>
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <span class="qty-number" id="qty-{{ item.product.id }}">{{ item.quantity }}</span>
+                                        <button class="qty-btn qty-plus" data-product-id="{{ item.product.id }}"
+                                                {% if item.product.stock <= 0 %}disabled{% endif %}>
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <span class="stock-info">
+                                        ({{ item.product.stock }} in stock)
+                                    </span>
+                                    {% if item.product.stock <= 3 and item.product.stock > 0 %}
+                                        <span class="stock-warning">⚠️ Low stock!</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- ✅ FIX: Added id for subtotal -->
+                                <p class="cart-item-subtotal">Subtotal: ₦<span id="subtotal-{{ item.product.id }}">{{ item.get_total_price }}</span></p>
                             </div>
                             <button class="btn btn-remove remove-item" data-product-id="{{ item.product.id }}">
                                 <i class="fas fa-trash"></i> Remove
                             </button>
                         </div>
                     {% endfor %}
-    
                 </div>
                 
                 <div class="cart-summary" data-aos="fade-down">
@@ -150,14 +320,17 @@
                         <span>Total Items:</span>
                         <span id="total-items">{{ cart_count }}</span>
                     </div>
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span>₦<span id="cart-subtotal">{{ total_price }}</span></span>
+                    </div>
                     <div class="summary-row total-price">
                         <span>Total:</span>
-                        <span>₦{{ total_price }}</span>
+                        <span>₦<span id="cart-total">{{ total_price }}</span></span>
                     </div>
                     
                     <a href="{% url 'checkout_to_whatsapp' %}" class="btn btn-primary checkout-btn" target="_blank">
-                    <i class="bx bxl-whatsapp" style="font-size: 18px;"></i> Order Now via WhatsApp
-                     
+                        <i class="bx bxl-whatsapp" style="font-size: 18px;"></i> Order Now via WhatsApp
                     </a>
                     
                     <a href="{% url 'shop' %}" class="btn btn-outline continue-shopping">
@@ -206,42 +379,211 @@
   </div>
 </footer>
 
-
 <script src="{% static 'script.js' %}"></script>
 <script src="{% static 'shop.js' %}"></script>
 
-<!-- Add this JavaScript for cart functionality -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 
 <script>
-       AOS.init({
-            duration: 800,
-            easing: 'ease-in-out',
-            once: false,
-            offset: 100,
-            delay: 0,
-        });
+// Initialize AOS
+AOS.init({
+    duration: 800,
+    easing: 'ease-in-out',
+    once: false,
+    offset: 100,
+    delay: 0,
+});
 
-        // Refresh AOS after page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            AOS.refresh();
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    AOS.refresh();
+});
 
-        // Also refresh after all images load
-        window.addEventListener('load', function() {
-            AOS.refresh();
-        });
+window.addEventListener('load', function() {
+    AOS.refresh();
+});
 
 $(document).ready(function() {
     console.log('Cart page loaded');
     
-    // Remove item from cart
+    // ===========================================================
+    // UPDATE QUANTITY - INCREASE (✅ FIX: Added this handler)
+    // ===========================================================
+    $('.qty-plus').click(function() {
+        const productId = $(this).data('product-id');
+        const $button = $(this);
+        
+        // Disable button while processing
+        $button.prop('disabled', true);
+        
+        updateQuantity(productId, 'increase', function() {
+            // Re-enable button after update
+            $button.prop('disabled', false);
+            
+            // Check if stock is now zero
+            const stockInfo = $button.closest('.cart-item-quantity').find('.stock-info');
+            const stockText = stockInfo.text();
+            const stockMatch = stockText.match(/\d+/);
+            if (stockMatch) {
+                const remainingStock = parseInt(stockMatch[0]);
+                if (remainingStock <= 0) {
+                    $button.prop('disabled', true);
+                }
+            }
+        });
+    });
+    
+    // ===========================================================
+    // UPDATE QUANTITY - DECREASE
+    // ===========================================================
+    $('.qty-minus').click(function() {
+        const productId = $(this).data('product-id');
+        const $button = $(this);
+        
+        // Disable button while processing
+        $button.prop('disabled', true);
+        
+        updateQuantity(productId, 'decrease', function() {
+            // Re-enable button after update
+            $button.prop('disabled', false);
+            
+            // Check if quantity is now 1
+            const qtySpan = $button.closest('.quantity-control').find('.qty-number');
+            const currentQty = parseInt(qtySpan.text());
+            if (currentQty <= 1) {
+                $button.prop('disabled', true);
+            }
+        });
+    });
+    
+    // ===========================================================
+    // UPDATE QUANTITY FUNCTION (✅ FIXED)
+    // ===========================================================
+    function updateQuantity(productId, action, callback) {
+        const $item = $('.cart-item[data-product-id="' + productId + '"]');
+        const $qtyDisplay = $('#qty-' + productId);
+        const $subtotal = $('#subtotal-' + productId);
+        const $totalItems = $('#total-items');
+        const $cartTotal = $('#cart-total');
+        const $cartSubtotal = $('#cart-subtotal');
+        const $stockInfo = $item.find('.stock-info');
+        
+        // Save current quantity for rollback
+        const currentQty = parseInt($qtyDisplay.text());
+        $qtyDisplay.data('previous', currentQty);
+        
+        // Show loading state
+        $qtyDisplay.html('<i class="fas fa-spinner fa-spin"></i>');
+        
+        $.ajax({
+            url: "{% url 'update_cart_quantity' %}",
+            method: 'POST',
+            data: JSON.stringify({
+                product_id: productId,
+                action: action
+            }),
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            contentType: 'application/json',
+            success: function(response) {
+                console.log('Update response:', response);
+                if (response.success) {
+                    // Update quantity display
+                    $qtyDisplay.text(response.quantity);
+                    
+                    // Update subtotal
+                    $subtotal.text(response.subtotal);
+                    
+                    // Update cart totals
+                    $totalItems.text(response.cart_count);
+                    $cartTotal.text(response.total);
+                    $cartSubtotal.text(response.total);
+                    
+                    // Update cart count in header
+                    $('.cart-count').text(response.cart_count);
+                    
+                    // Update stock info
+                    const remainingStock = response.remaining_stock;
+                    $stockInfo.text('(' + remainingStock + ' in stock)');
+                    
+                    // Update stock badge
+                    const $stockBadge = $item.find('.stock-badge');
+                    if ($stockBadge.length) {
+                        if (remainingStock <= 0) {
+                            $stockBadge.removeClass('in-stock low-stock').addClass('out-of-stock');
+                            $stockBadge.html('<i class="fas fa-times-circle"></i> Out of Stock');
+                            $item.find('.qty-plus').prop('disabled', true);
+                        } else if (remainingStock <= 3) {
+                            $stockBadge.removeClass('in-stock out-of-stock').addClass('low-stock');
+                            $stockBadge.html('<i class="fas fa-exclamation-triangle"></i> Only ' + remainingStock + ' left!');
+                        } else {
+                            $stockBadge.removeClass('low-stock out-of-stock').addClass('in-stock');
+                            $stockBadge.html('<i class="fas fa-check-circle"></i> In Stock');
+                            $item.find('.qty-plus').prop('disabled', false);
+                        }
+                    }
+                    
+                    // Update quantity buttons
+                    if (response.quantity <= 1) {
+                        $item.find('.qty-minus').prop('disabled', true);
+                    } else {
+                        $item.find('.qty-minus').prop('disabled', false);
+                    }
+                    
+                    if (remainingStock <= 0) {
+                        $item.find('.qty-plus').prop('disabled', true);
+                    } else {
+                        $item.find('.qty-plus').prop('disabled', false);
+                    }
+                    
+                    // Show/hide low stock warning
+                    if (remainingStock <= 3 && remainingStock > 0) {
+                        if (!$item.find('.stock-warning').length) {
+                            $item.find('.cart-item-quantity').append(
+                                '<span class="stock-warning">⚠️ Low stock!</span>'
+                            );
+                        }
+                    } else {
+                        $item.find('.stock-warning').remove();
+                    }
+                    
+                } else {
+                    alert('Error: ' + response.error);
+                    // Revert quantity display
+                    $qtyDisplay.text($qtyDisplay.data('previous') || 1);
+                }
+                
+                // Call callback if provided
+                if (callback) callback();
+            },
+            error: function(xhr) {
+                console.error('Error:', xhr);
+                let errorMsg = 'An error occurred. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                alert(errorMsg);
+                // Revert quantity display
+                $qtyDisplay.text($qtyDisplay.data('previous') || 1);
+                if (callback) callback();
+            }
+        });
+    }
+    
+    // ===========================================================
+    // REMOVE ITEM FROM CART
+    // ===========================================================
     $('.remove-item').click(function() {
         const productId = $(this).data('product-id');
         const $item = $(this).closest('.cart-item');
+        const productName = $item.find('h3').text();
         
-        if (confirm('Are you sure you want to remove this item?')) {
+        if (confirm('Remove "' + productName + '" from your cart?')) {
+            // Show loading state
+            $item.css('opacity', '0.5');
+            
             $.ajax({
                 url: "{% url 'delete_from_cart' %}",
                 method: 'POST',
@@ -255,7 +597,7 @@ $(document).ready(function() {
                 success: function(response) {
                     console.log('Delete response:', response);
                     if (response.success) {
-                        $item.fadeOut(300, function() {
+                        $item.slideUp(300, function() {
                             $(this).remove();
                             // Update cart count
                             $('.cart-count').text(response.cart_count);
@@ -268,24 +610,19 @@ $(document).ready(function() {
                         });
                     } else {
                         alert('Error: ' + response.error);
+                        $item.css('opacity', '1');
                     }
                 },
                 error: function(xhr) {
                     console.error('Error:', xhr);
                     alert('An error occurred. Please try again.');
+                    $item.css('opacity', '1');
                 }
             });
         }
     });
 });
 </script>
-<!-- <script>
-
-// Function to update cart count (add to your existing JS)
-function updateCartCount(count) {
-    $('.cart-count').text(count);
-}
-</script> -->
 {% endblock %}
 </body>
 </html>
