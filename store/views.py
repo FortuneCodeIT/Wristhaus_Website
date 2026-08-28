@@ -290,11 +290,10 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
     for item in cart_items:
         product = item.product
         if product.image:
-            if product.image.url.startswith('http'):
-                image_url = product.image.url
-            else:
-                image_url = base_url + product.image.url
-            message += f"{image_url}\n"
+            image_url = product.get_image_url()
+
+            if image_url:
+                message += f"{image_url}\n"
     
     # Add spacing after images
     message += "\n" * 2

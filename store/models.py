@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.utils.text import slugify
 
 
@@ -46,9 +47,15 @@ class Shop_All(models.Model):
     
     def get_image_url(self):
         """Get the full image URL for WhatsApp"""
-        if self.image:
-            return self.image.url
-        return None
+        if not self.image:
+            return None
+
+        return (
+            f"{settings.SUPABASE_URL}"
+            f"/storage/v1/object/public/"
+            f"{settings.AWS_STORAGE_BUCKET_NAME}/"
+            f"/{self.image.name}"
+        )
     
     # def save(self, *args, **kwargs):
     #     if not self.slug:          
