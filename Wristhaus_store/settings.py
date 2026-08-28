@@ -20,9 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 load_dotenv()  # Load environment variables from .env file
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-SUPABASE_STORAGE_BUCKET = "media"
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -162,14 +160,14 @@ LOGIN_REDIRECT_URL = 'admin_dashboard'
 LOGOUT_REDIRECT_URL = 'admin_login'
 
 
-import os
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
 
 AWS_ACCESS_KEY_ID = SUPABASE_SERVICE_KEY
 AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_KEY
-AWS_STORAGE_BUCKET_NAME = "product-images"
+AWS_STORAGE_BUCKET_NAME = "media"
 AWS_S3_ENDPOINT_URL = f"{SUPABASE_URL}/storage/v1/s3"
 AWS_S3_REGION_NAME = "eu-west-1"
 
