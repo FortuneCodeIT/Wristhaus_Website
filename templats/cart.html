@@ -260,7 +260,7 @@
                         <div class="cart-item" data-product-id="{{ item.product.id }}" data-aos="fade-right">
                             <div class="cart-item-image">
                                 {% if item.product.image %}
-                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                    <img src="/media/{{ item.product.image.url }}" alt="{{ item.product.name }}">
                                 {% else %}
                                     <div class="no-image">No Image</div>
                                 {% endif %}
