@@ -14,8 +14,15 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import dj_database_url
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+load_dotenv()  # Load environment variables from .env file
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_STORAGE_BUCKET = "media"
 
 
 # Quick-start development settings - unsuitable for production
@@ -39,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles', 
+    'storages',
     'store',
 ]
 
@@ -152,3 +160,27 @@ LOGOUT_REDIRECT_URL = 'index'
 LOGIN_URL = 'admin_login'  # Redirect to admin login when @login_required is used
 LOGIN_REDIRECT_URL = 'admin_dashboard'
 LOGOUT_REDIRECT_URL = 'admin_login'
+
+
+import os
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+
+AWS_ACCESS_KEY_ID = SUPABASE_SERVICE_KEY
+AWS_SECRET_ACCESS_KEY = SUPABASE_SERVICE_KEY
+AWS_STORAGE_BUCKET_NAME = "product-images"
+AWS_S3_ENDPOINT_URL = f"{SUPABASE_URL}/storage/v1/s3"
+AWS_S3_REGION_NAME = "eu-west-1"
+
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
