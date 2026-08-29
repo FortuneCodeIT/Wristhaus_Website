@@ -294,7 +294,7 @@
                                                 {% if item.quantity <= 1 %}disabled{% endif %}>
                                             <i class="fas fa-minus"></i>
                                         </button>
-                                        <span class="qty-number" id="qty-{{ item.product.id }}">{{ item.quantity }}</span>
+                                        <span class="qty-number" id="qty-{{ item.product.id }}" style="color: var(--cream-muted)">{{ item.quantity }}</span>
                                         <button class="qty-btn qty-plus" data-product-id="{{ item.product.id }}"
                                                 {% if item.product.stock <= 0 %}disabled{% endif %}>
                                             <i class="fas fa-plus"></i>
