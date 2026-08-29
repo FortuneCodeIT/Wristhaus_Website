@@ -289,11 +289,11 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
     # Add all image URLs at the VERY TOP
     for item in cart_items:
         product = item.product
-        if product.image:
-            image_url = product.get_image_url()
+    if product.image:
+        image_url = product.get_image_url()
 
-            if image_url:
-                message += f"{image_url}\n"
+        if image_url:
+            message += f"{image_url}\n"
     
     # Add spacing after images
     message += "\n" * 2

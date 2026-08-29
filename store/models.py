@@ -52,8 +52,7 @@ class Shop_All(models.Model):
 
         return (
             f"{settings.SUPABASE_URL}"
-            f"/storage/v1/object/public/"
-            f"{settings.AWS_STORAGE_BUCKET_NAME}/"
+            f"/storage/v1/object/public/media"
             f"/{self.image.name}"
         )
     

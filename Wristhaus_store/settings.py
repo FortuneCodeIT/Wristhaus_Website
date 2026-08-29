@@ -15,6 +15,8 @@ import dj_database_url
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -173,9 +175,9 @@ AWS_S3_REGION_NAME = "eu-west-1"
 
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_SIGNATURE_VERSION = "s3v4"
-AWS_S3_ADDRESSING_STYLE = "path"
+# AWS_QUERYSTRING_AUTH = False
+# AWS_S3_SIGNATURE_VERSION = "s3v4"
+# AWS_S3_ADDRESSING_STYLE = "path"
 
 STORAGES = {
     "default": {

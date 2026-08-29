@@ -173,7 +173,7 @@
         <div class="category-image">
             {% with first_product=category.products|first %}
             {% if first_product and first_product.image %}
-                <img src="{{ first_product.image.url }}" alt="{{ category.name }}">
+                <img src="{{ first_product.get_image_url }}" alt="{{ category.name }}">
             {% else %}
                 <div class="no-image">
                     <i class="fas fa-{% if category.code == 'watches' %}clock{% elif category.code == 'bracelets' %}gem{% elif category.code == 'smart-access' %}microchip{% else %}shield-alt{% endif %}"></i>

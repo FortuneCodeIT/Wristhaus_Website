@@ -76,7 +76,7 @@
             <tr>
                 <td>
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image-small">
+                    <img src="{{ product.get_image_url }}" alt="{{ product.name }}" class="product-image-small">
                     {% else %}
                     <span style="color: var(--cream-muted);">No Image</span>
                     {% endif %}
