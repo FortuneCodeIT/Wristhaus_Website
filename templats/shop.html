@@ -335,7 +335,7 @@
        <a href="{% url 'product_detail' shop_all.id %}" class="card-link-wrapper" style="text-decoration: none; color: inherit;">
           <div class="card-media">
             {% if shop_all.image %}
-            <img src="/media/{{shop_all.image}}" alt="">
+            <img src="{{shop_all.get_image_url}}" alt="">
             {% else %}
               <div class="no-image">No Image</div>
             {% endif %}

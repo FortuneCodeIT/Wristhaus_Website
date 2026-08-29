@@ -262,7 +262,7 @@
 
 
 <!-- Featured Products Section (Optional) -->
-<section class="section section-alt" style=" padding: 20px 0 80px;" data-aos="fade-up" data-aos-delay="200">
+<!-- <section class="section section-alt" style=" padding: 20px 0 80px;" data-aos="fade-up" data-aos-delay="200">
     <div class="wrap">
         <div class="section-head">
             <span class="eyebrow">Featured</span>
@@ -274,7 +274,7 @@
                 <a href="{% url 'product_detail' product.id %}">
                     <div class="card-media">
                         {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                            <img src="{{ product.get_image_url }}" alt="{{ product.name }}">
                         {% else %}
                             <div class="no-image">No Image</div>
                         {% endif %}
@@ -303,7 +303,7 @@
             {% endfor %}
         </div>
     </div>
-</section>
+</section> -->
 
 <!-- STORY -->
 <section class="story" >
