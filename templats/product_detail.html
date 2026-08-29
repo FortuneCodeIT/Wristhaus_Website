@@ -215,7 +215,7 @@
                     <a href="{% url 'product_detail' related.id %}">
                         <div class="related-image">
                             {% if related.image %}
-                                <img src="{{ related.image.url }}" alt="{{ related.name }}">
+                                <img src="{{ related.get_image_url }}" alt="{{ related.name }}">
                             {% else %}
                                 <div class="no-image">No Image</div>
                             {% endif %}
