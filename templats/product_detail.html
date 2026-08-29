@@ -126,7 +126,7 @@
             <!-- Product Image -->
             <div class="product-image-container" data-aos="fade-down">
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-detail-image">
+                    <img src="{{ product.get_image_url }}" alt="{{ product.name }}" class="product-detail-image">
                 {% else %}
                     <div class="no-image">No Image Available</div>
                 {% endif %}
