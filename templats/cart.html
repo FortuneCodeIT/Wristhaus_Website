@@ -292,12 +292,12 @@
                                     <div class="quantity-control">
                                         <button class="qty-btn qty-minus" data-product-id="{{ item.product.id }}" 
                                                 {% if item.quantity <= 1 %}disabled{% endif %}>
-                                            <i class="fas fa-minus"></i>
+                                            <i class="fas fa-minus" style="color: var(--cream-muted)">></i>
                                         </button>
                                         <span class="qty-number" id="qty-{{ item.product.id }}" style="color: var(--cream-muted)">{{ item.quantity }}</span>
                                         <button class="qty-btn qty-plus" data-product-id="{{ item.product.id }}"
                                                 {% if item.product.stock <= 0 %}disabled{% endif %}>
-                                            <i class="fas fa-plus"></i>
+                                            <i class="fas fa-plus" style="color: var(--cream-muted)">></i>
                                         </button>
                                     </div>
                                     <span class="stock-info">
