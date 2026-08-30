@@ -9,7 +9,7 @@ from django.contrib.auth import login, logout, authenticate, update_session_auth
 from django.contrib import messages
 from django.db import transaction, IntegrityError, OperationalError
 from django.views.decorators.http import require_POST
-from .models import Home_Collection, Shop_All, Cart, CartItem, ClientReview
+from .models import Home_Collection, Shop_All, Cart, Order, CartItem, ClientReview
 from .forms import ProductForm, ReviewForm, AdminProfileForm, AdminPasswordChangeForm  # We'll create this
 from django.utils import timezone
 import urllib.parse
@@ -194,6 +194,7 @@ def add_to_cart(request):
         
         cart_count = cart.get_total_items()
         
+        messages.success(request, f'{product.name} added to cart! ({quantity} item(s))')
         return JsonResponse({
             'success': True,
             'cart_count': cart_count,
@@ -248,6 +249,41 @@ def delete_from_cart(request):
     
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+def delete_all_from_cart(request):
+    """Remove all items from cart and restore stock"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        cart = get_or_create_cart(request)
+        cart_items = cart.items.all()
+        
+        if not cart_items.exists():
+            return JsonResponse({'success': False, 'error': 'Cart is already empty'})
+        
+        # Restore stock for all items
+        with transaction.atomic():
+            for item in cart_items:
+                product = item.product
+                product.stock += item.quantity
+                product.save()
+            
+            # Delete all items
+            cart_items.delete()
+        
+        cart_count = cart.get_total_items()
+        
+        return JsonResponse({
+            'success': True,
+            'cart_count': cart_count,
+            'message': 'All items removed from cart! Stock restored.'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error deleting all items: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
 # UPDATED: Cart page with better session handling
 def cart_page(request):
     # Force session creation
@@ -259,7 +295,7 @@ def cart_page(request):
     cart_count = cart.get_total_items()
     total_price = cart.get_total_price()
     
-    whatsapp_message = generate_whatsapp_message(cart_items, total_price)
+    whatsapp_message = generate_whatsapp_message(cart_items, total_price, request, order=None)
     
     context = {
         'cart_items': cart_items,
@@ -270,7 +306,7 @@ def cart_page(request):
     
     return render(request, 'cart.html', context)
 
-def generate_whatsapp_message(cart_items, total_price, request=None):
+def generate_whatsapp_message(cart_items, total_price, request=None, order=None):
     """Generate WhatsApp order message with image previews"""
     if not cart_items:
         return "Your cart is empty."
@@ -289,17 +325,26 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
     # Add all image URLs at the VERY TOP
     for item in cart_items:
         product = item.product
-    if product.image:
-        image_url = product.get_image_url()
+        if product.image:
+            image_url = product.get_image_url()
 
         if image_url:
             message += f"{image_url}\n"
     
+    
     # Add spacing after images
     message += "\n" * 2
     
-    # Order header
+    # Order header with ORDER NUMBER
     message += "🛍️ *WRISTHAUS - NEW ORDER* 🛍️\n"
+    message += "═" * 35 + "\n"
+    
+    # ✅ Display order number if it exists
+    if order and hasattr(order, 'order_number') and order.order_number:
+        message += f"📋 *Order #: {order.order_number}*\n"
+    else:
+        message += "📋 *Order Preview*\n"
+    
     message += "═" * 35 + "\n\n"
     
     # Add each item
@@ -324,6 +369,12 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
     
     message += f"\n📍 *Total: ₦{total_price}*\n\n"
     
+    # ✅ Tracking info with order number
+    if order and hasattr(order, 'order_number') and order.order_number:
+        message += "🔍 *Track your order:*\n"
+        message += f"📱 Use your order number: *{order.order_number}*\n"
+        message += f"🌐 Track here: {base_url}/track-order/?order_number={order.order_number}\n\n"
+    
     # Footer
     message += "✅ *Please reply with your delivery address.*\n"
     message += "📞 *We'll confirm your order immediately.*\n"
@@ -335,18 +386,15 @@ def generate_whatsapp_message(cart_items, total_price, request=None):
 # UPDATED: Checkout with stock validation
 
 def checkout_to_whatsapp(request):
-    """Checkout and redirect to WhatsApp"""
-    logger.info("=== CHECKOUT STARTED ===")
+    """Checkout, save order, clear cart, redirect to WhatsApp"""
+    logger.info("=== CHECKOUT TO WHATSAPP STARTED ===")
     
     try:
         cart = get_or_create_cart(request)
         cart_items = cart.items.all()
         total_price = cart.get_total_price()
         
-        logger.info(f"Cart items: {cart_items.count()}")
-        
         if not cart_items:
-            logger.warning("Empty cart")
             messages.warning(request, 'Your cart is empty.')
             return redirect('cart_page')
         
@@ -354,40 +402,84 @@ def checkout_to_whatsapp(request):
         with transaction.atomic():
             for item in cart_items:
                 if item.product.stock < item.quantity:
-                    logger.warning(f"Stock issue: {item.product.name}")
                     messages.error(
                         request, 
                         f'Sorry, "{item.product.name}" is out of stock. Only {item.product.stock} available.'
                     )
                     return redirect('cart_page')
         
-        # Generate message
-        message = generate_whatsapp_message(cart_items, total_price, request)
-        logger.info(f"Message generated: {len(message)} chars")
+        # Prepare order items
+        order_items = []
+        for item in cart_items:
+            order_items.append({
+                'product_id': item.product.id,
+                'product_name': item.product.name,
+                'price': str(item.product.price),
+                'quantity': item.quantity,
+                'subtotal': str(item.get_total_price()),
+            })
         
-        # Encode
+        # ✅ Create order
+        order = Order.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            session_key=request.session.session_key,
+            items=order_items,
+            total_price=total_price,
+            total_items=cart.get_total_items(),
+            status='pending'
+        )
+        
+        logger.info(f"✅ Order #{order.id} created with order number: {order.order_number}")
+        
+        # ✅ Store order number in session
+        request.session['last_order_number'] = order.order_number
+        request.session['last_order_id'] = order.id
+        
+        # ✅ FIX: Pass the order object to the message function
+        message = generate_whatsapp_message(cart_items, total_price, request, order=order)
         encoded_message = urllib.parse.quote(message)
-        logger.info("Message encoded")
-        
-        # WhatsApp URL
-        phone_number = "2347030816894"
+        phone_number = "2347041108651"
         whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
-        logger.info(f"Redirecting to: {whatsapp_url[:50]}...")
         
+        # Clear cart
         cart_items.delete()
         
-        messages.success(request, '✅ Your order has been placed! Cart cleared')
+        messages.success(
+            request, 
+            f'✅ Order #{order.order_number} placed successfully! Save this number to track your order.'
+        )
+        
+        logger.info(f"✅ Cart cleared. Redirecting to WhatsApp for order #{order.id}")
         
         return redirect(whatsapp_url)
-         
+        
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
+        logger.error(f"❌ Error in checkout: {str(e)}")
         import traceback
         traceback.print_exc()
         messages.error(request, 'An error occurred. Please try again.')
         return redirect('cart_page')
+    
+    
 
-
+def track_order(request):
+    """Track order by order number - No login required"""
+    order_number = request.GET.get('order_number', '')
+    order = None
+    error = None
+    
+    if order_number:
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except Order.DoesNotExist:
+            error = 'Order not found. Please check your order number.'
+    
+    context = {
+        'order': order,
+        'order_number': order_number,
+        'error': error,
+    }
+    return render(request, 'track_order.html', context)
 
 
 # NEW: Update cart item quantity (for cart page)
@@ -561,9 +653,12 @@ def admin_dashboard(request):
     
     # Get statistics
     total_products = Shop_All.objects.count()
-    total_orders = Cart.objects.count()
-    total_items_sold = CartItem.objects.count()
+    total_orders = Order.objects.count()
+    total_items_sold =sum(order.total_items for order in Order.objects.all())
     low_stock = Shop_All.objects.filter(stock__lt=5).count()
+    
+     # Recent orders
+    recent_orders = Order.objects.all().order_by('-created_at')[:5]
     
     # Recent products
     recent_products = Shop_All.objects.all().order_by('-created_at')[:5]
@@ -573,9 +668,12 @@ def admin_dashboard(request):
         'total_orders': total_orders,
         'total_items_sold': total_items_sold,
         'low_stock': low_stock,
+        'recent_orders': recent_orders,
         'recent_products': recent_products,
     }
     return render(request, 'admin/dashboard.html', context)
+
+
 
 @login_required
 def admin_products(request):
@@ -583,9 +681,21 @@ def admin_products(request):
     if not request.user.is_superuser:
         messages.error(request, 'You do not have permission to access the admin panel.')
         return redirect('index')
+        # Get search query
+    search_query = request.GET.get('search', '')
     
+    # Start with all products
     products = Shop_All.objects.all().order_by('-created_at')
     
+    # Apply search filter if query exists
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(category__icontains=search_query) |
+            Q(price__icontains=search_query)
+        )
+
     # Pagination
     paginator = Paginator(products, 10)
     page = request.GET.get('page')
@@ -600,6 +710,7 @@ def admin_products(request):
     return render(request, 'admin/products.html', {
         'products': products_page,
         'total_products': products.count(),
+         'search_query': search_query,
     })
  
 @login_required
@@ -648,6 +759,7 @@ def admin_product_edit(request, product_id):
         'title': f'Edit Product: {product.name}',
         'button_text': 'Update Product',
     })
+    
 
 @login_required
 def admin_product_delete(request, product_id):
@@ -667,7 +779,9 @@ def admin_product_delete(request, product_id):
     return render(request, 'admin/product_confirm_delete.html', {
         'product': product,
     })
-
+    
+    
+    
 @login_required
 def admin_orders(request):
     """View all orders"""
@@ -675,71 +789,131 @@ def admin_orders(request):
         messages.error(request, 'You do not have permission to access the admin panel.')
         return redirect('index')
     
-    # Get all carts with items
-    carts = Cart.objects.filter(items__isnull=False).distinct().order_by('-created_at')
+        
+    # Get search query and filters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', 'all')
+
     
+    # Get all orders - ORDER BY newest first
+    orders = Order.objects.all().order_by('-created_at')
+    
+        
+    # Apply status filter
+    if status_filter != 'all':
+        orders = orders.filter(status=status_filter)
+    
+    # Apply search filter
+    if search_query:
+        orders = orders.filter(
+            Q(status__icontains=search_query) |
+            Q(order_number__icontains=search_query) |
+            Q(session_key__icontains=search_query) |
+            Q(total_price__icontains=search_query)
+        )
+
     # Pagination
-    paginator = Paginator(carts, 10)
+    paginator = Paginator(orders, 10)
     page = request.GET.get('page')
     
     try:
-        carts_page = paginator.page(page)
+        orders_page = paginator.page(page)
     except PageNotAnInteger:
-        carts_page = paginator.page(1)
+        orders_page = paginator.page(1)
     except EmptyPage:
-        carts_page = paginator.page(paginator.num_pages)
-    
-    # Prepare order data
-    orders = []
-    for cart in carts_page:
-        items = cart.items.all()
-        total = cart.get_total_price()
-        orders.append({
-            'cart': cart,
-            'items': items,
-            'total': total,
-            'item_count': items.count(),
-        })
+        orders_page = paginator.page(paginator.num_pages)
     
     return render(request, 'admin/orders.html', {
-        'orders': orders,
-        'carts': carts_page,
+        'orders': orders_page,
+        'total_orders': orders.count(),
+        'search_query': search_query,
+        'status_filter': status_filter,
     })
+    
+    
 
 @login_required
-def admin_order_detail(request, cart_id):
+def admin_order_detail(request, order_id):
     """View order details"""
     if not request.user.is_superuser:
         messages.error(request, 'You do not have permission to access the admin panel.')
         return redirect('index')
     
-    cart = get_object_or_404(Cart, id=cart_id)
-    items = cart.items.all()
-    total = cart.get_total_price()
+    order = get_object_or_404(Order, id=order_id)
+    items = order.items
     
-    return render(request, 'admin/order_detail.html', {
-        'cart': cart,
+    # If items is stored as JSON string, parse it
+    if isinstance(items, str):
+        import json
+        items = json.loads(items)
+    
+    context = {
+        'order': order,
         'items': items,
-        'total': total,
-    })
+        'total': order.total_price,
+    }
+    return render(request, 'admin/order_detail.html', context)
 
+# ✅ CORRECT: Admin Order Delete using Order model (ONLY ONE VERSION)
 @login_required
-def admin_order_delete(request, cart_id):
+def admin_order_delete(request, order_id):
     """Delete an order"""
     if not request.user.is_superuser:
         messages.error(request, 'You do not have permission to access the admin panel.')
         return redirect('index')
     
-    cart = get_object_or_404(Cart, id=cart_id)
+    order = get_object_or_404(Order, id=order_id)
     
     if request.method == 'POST':
-        cart.delete()
+        order.delete()
         messages.success(request, 'Order deleted successfully!')
         return redirect('admin_orders')
     
-    return render(request, 'admin/order_confirm_delete.html', {
-        'cart': cart,
-    })
+    return render(request, 'admin/order_confirm_delete.html', {'order': order})
+
+
+@login_required
+def admin_order_approve(request, order_id):
+    """Approve an order - change status to completed"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+    
+    order = get_object_or_404(Order, id=order_id)
+    order.status = 'completed'
+    order.save()
+    
+    messages.success(request, f'✅ Order #{order.id} has been marked as COMPLETED!')
+    return redirect('admin_order_detail', order_id=order.id)
+
+@login_required
+def admin_order_process(request, order_id):
+    """Process an order - change status to processing"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+    
+    order = get_object_or_404(Order, id=order_id)
+    order.status = 'processing'
+    order.save()
+    
+    messages.success(request, f'🔄 Order #{order.id} is now PROCESSING!')
+    return redirect('admin_order_detail', order_id=order.id)
+
+@login_required
+def admin_order_cancel(request, order_id):
+    """Cancel an order - change status to cancelled"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+    
+    order = get_object_or_404(Order, id=order_id)
+    order.status = 'cancelled'
+    order.save()
+    
+    messages.success(request, f'❌ Order #{order.id} has been CANCELLED!')
+    return redirect('admin_order_detail', order_id=order.id)
+
 
 @login_required
 def admin_review(request):
@@ -748,7 +922,32 @@ def admin_review(request):
         messages.error(request, 'You do not have permission to access the admin panel.')
         return redirect('index')
     
+       # Get search query
+    search_query = request.GET.get('search', '')
+    filter_type = request.GET.get('filter', 'all')
+    
+    # Start with all reviews
     reviews = ClientReview.objects.all().order_by('-created_at')
+    
+    # Apply filter
+    if filter_type == 'pending':
+        reviews = reviews.filter(is_approved=False)
+    elif filter_type == 'approved':
+        reviews = reviews.filter(is_approved=True)
+    
+    # Apply search filter
+    if search_query:
+        reviews = reviews.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(review__icontains=search_query)
+        )
+    
+        
+    # Counts for badges
+    pending_count = ClientReview.objects.filter(is_approved=False).count()
+    approved_count = ClientReview.objects.filter(is_approved=True).count()
+    total_count = ClientReview.objects.count()
     
     # Pagination
     paginator = Paginator(reviews, 10)
@@ -764,6 +963,11 @@ def admin_review(request):
     return render(request, 'admin/reviews.html', {
         'reviews': reviews_pages,
         'total_reviews': reviews.count(),
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'total_count': total_count,
+        'search_query': search_query,
+        'current_filter': filter_type,
     })
     
 

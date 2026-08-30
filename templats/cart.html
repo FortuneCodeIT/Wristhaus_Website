@@ -146,6 +146,65 @@
     padding-top: 1rem;
 }
 
+
+
+/* Toast notification (alternative) */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-1);
+    padding: 1rem 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideInRight 0.5s ease;
+    max-width: 400px;
+}
+
+.toast-notification .toast-icon {
+    font-size: 1.5rem;
+}
+
+.toast-notification .toast-icon.success {
+    color: #28a745;
+}
+
+.toast-notification .toast-icon.error {
+    color: #dc3545;
+}
+
+.toast-notification .toast-message {
+    color: var(--cream-muted);
+    font-size: 0.9rem;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {    
     .cart-item-quantity {
@@ -169,7 +228,14 @@
         font-size: 0.85rem;
         min-width: 25px;
     }
+    .toast-notification {
+        bottom: 15px;
+        right: 15px;
+        left: 15px;
+        max-width: none;
+    }
 }
+
 </style>
 <body>
 
@@ -191,6 +257,8 @@
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
+      <a href="{% url 'track_order' %}">Track Order</a>
+      
       {% if user.is_authenticated and user.is_superuser %}
       <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
       {% endif %}
@@ -210,6 +278,8 @@
         <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
         <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
         <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+        <li><a href="{% url 'track_order' %}"><i class="fas fa-truck"></i> Track Order</a></li>
+        
         {% if user.is_authenticated and user.is_superuser %}
         <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
         {% endif %}
@@ -253,6 +323,27 @@
 <section class="section">
     <div class="wrap">
         {% if cart_items %}
+                       <!-- ✅ INSERT THE ORDER SUCCESS MESSAGE HERE -->
+                {% if request.session.last_order_number %}
+                    <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; border-radius: var(--radius-1); padding: 1.5rem; margin: 1rem 0; text-align: center;">
+                        <p style="color: #28a745; font-size: 1.1rem;">
+                            <i class="fas fa-check-circle"></i> Your order has been placed!
+                        </p>
+                        <p style="color: var(--cream-deep);">
+                            Order Number: <strong>{{ request.session.last_order_number }}</strong>
+                        </p>
+                        <a href="{% url 'track_order' %}?order_number={{ request.session.last_order_number }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-search"></i> Track Order
+                        </a>
+                    </div>
+                {% endif %}
+
+                <div style="display: flex; justify-content: flex-start; margin-bottom: 1rem;">
+                    <button class="btn btn-danger remove-all-btn" id="removeAllBtn">
+                        <i class="fas fa-trash-alt"></i> Remove All Items
+                    </button>
+                </div>
+
             <div class="cart-container">
                 <div class="cart-items">
                     {% for item in cart_items %}
@@ -318,6 +409,9 @@
                     {% endfor %}
                 </div>
                 
+
+
+
                 <div class="cart-summary" data-aos="fade-down">
                     <h2>Order Summary</h2>
                     <div class="summary-row">
@@ -369,7 +463,7 @@
       <div class="footer-col">
         <h4>Contact Us</h4>
         <ul>
-          <li><span>WhatsApp: +92 300 1234567</span></li>
+          <li><span><a href="https://wa.me/2347041108651" target="_blank" aria-label="WhatsApp">WhatsApp: +2347041108651</a></span></li>
           <li><span>Email: officialwristhaus@gmail.com</span></li>
         </ul>
         <div class="footer-social">
@@ -382,6 +476,7 @@
     <div class="footer-bottom">© 2026 Wristhaus . All Rights Reserved.</div>
   </div>
 </footer>
+
 
 
 
@@ -556,7 +651,7 @@ $(document).ready(function() {
                     }
                     
                 } else {
-                    alert('Error: ' + response.error);
+                    showToast('error', 'Error: ' + response.error);
                     // Revert quantity display
                     $qtyDisplay.text($qtyDisplay.data('previous') || 1);
                 }
@@ -570,7 +665,7 @@ $(document).ready(function() {
                 if (xhr.responseJSON && xhr.responseJSON.error) {
                     errorMsg = xhr.responseJSON.error;
                 }
-                alert(errorMsg);
+                showToast('error', errorMsg);
                 // Revert quantity display
                 $qtyDisplay.text($qtyDisplay.data('previous') || 1);
                 if (callback) callback();
@@ -609,25 +704,148 @@ $(document).ready(function() {
                             $('.cart-count').text(response.cart_count);
                             $('#total-items').text(response.cart_count);
                             
+                                   
+                            // ✅ Show toast notification instead of popup
+                            showToast('success', response.message);
+
+
                             // Reload if cart is empty
                             if (response.cart_count === 0) {
                                 location.reload();
                             }
                         });
                     } else {
-                        alert('Error: ' + response.error);
+                        showToast('error', 'Error: ' + response.error);
                         $item.css('opacity', '1');
                     }
                 },
                 error: function(xhr) {
                     console.error('Error:', xhr);
-                    alert('An error occurred. Please try again.');
+                    showToast('error', 'An error occurred. Please try again.');
                     $item.css('opacity', '1');
                 }
             });
         }
     });
 });
+
+
+        // ===========================================================
+        // REMOVE ALL ITEMS FROM CART
+        // ===========================================================
+        function removeAllItems() {
+            const itemCount = {{ cart_count|default:0 }};
+            const cartContainer = document.querySelector('.cart-container');
+            
+            if (itemCount === 0) {
+                showToast('info', 'Your cart is already empty.');
+                cartContainer.style.display = 'block';
+                return;
+            }
+            
+            // Confirmation dialog
+            if (confirm(`Are you sure you want to remove all ${itemCount} item(s) from your cart? This action cannot be undone.`)) {
+                // Show loading state on buttons
+                $('#removeAllBtn, #removeAllBtnSummary')
+                    .prop('disabled', true)
+                    .html('<i class="fas fa-spinner fa-spin"></i> Removing...');
+                
+                $.ajax({
+                    url: "{% url 'delete_all_from_cart' %}",
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.success) {
+                            // Animate items disappearing
+                            $('.cart-item').fadeOut(400, function() {
+                                $(this).remove();
+                                
+                                // Update cart count
+                                $('.cart-count').text(0);
+                                $('#total-items').text(0);
+                                $('#cart-total').text('0.00');
+                                $('#cart-subtotal').text('0.00');
+                                
+                                // Show empty cart message
+                                $('.cart-container').html(`
+                                    <div class="empty-cart">
+                                        <i class="fas fa-shopping-cart" style="font-size: 4rem; color: var(--gold);"></i>
+                                        <h2>Your cart is empty</h2>
+                                        <p>All items have been removed from your cart.</p>
+                                        <a href="{% url 'shop' %}" class="btn btn-primary">Start Shopping</a>
+                                    </div>
+                                `);
+                                
+                                // Hide remove all buttons
+                                $('.remove-all-btn, .remove-all-btn-summary').hide();
+                                
+                                showToast('success', '✅ All items have been removed from your cart.');
+                            });
+                        } else {
+                            showToast('error', 'Error: ' + response.error);
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error:', xhr);
+                        showToast('error', 'An error occurred. Please try again.');
+                    },
+                    complete: function() {
+                        // Reset buttons
+                        $('#removeAllBtn, #removeAllBtnSummary')
+                            .prop('disabled', false)
+                            .html('<i class="fas fa-trash-alt"></i> Remove All Items');
+                    }
+                });
+            }
+        }
+
+        // Attach click handlers to both buttons
+        $('#removeAllBtn, #removeAllBtnSummary').click(function(e) {
+            e.preventDefault();
+            removeAllItems();
+        });
+        
+        // ===========================================================
+        // ADD STYLES FOR REMOVE ALL BUTTONS
+        // ===========================================================
+        // Add dynamic styles
+        $('<style>')
+            .prop('type', 'text/css')
+            .html(`
+                .btn-danger {
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: var(--radius-1);
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+                .btn-danger:hover {
+                    background: #c82333;
+                    transform: translateY(-2px);
+                }
+                .btn-danger:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+                .remove-all-btn-summary {
+                    width: 100%;
+                    justify-content: center;
+                    margin: 0.5rem 0;
+                }
+                .remove-all-btn {
+                    font-size: 0.9rem;
+                }
+            `)
+            .appendTo('head');
 </script>
 {% endblock %}
 </body>

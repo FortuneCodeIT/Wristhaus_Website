@@ -1,0 +1,39 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Delete Order{% endblock %}
+{% block header %}Delete Order{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div style="text-align: center; padding: 2rem 1rem;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 1rem;"></i>
+        
+        <h3 style="color: var(--cream-deep); margin-bottom: 0.5rem;">
+            Delete Order #{{ order.id }}?
+        </h3>
+        
+        <p style="color: var(--cream-muted); margin-bottom: 1.5rem;">
+            Order Number: <strong style="color: var(--gold);">{{ order.order_number|default:"N/A" }}</strong><br>
+            Total: <strong style="color: var(--gold);">₦{{ order.total_price }}</strong><br>
+            Items: <strong style="color: var(--cream-deep);">{{ order.total_items }}</strong>
+        </p>
+        
+        <p style="color: #dc3545; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            <i class="fas fa-info-circle"></i> This action cannot be undone.
+        </p>
+        
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </form>
+            <a href="{% url 'admin_orders' %}" class="btn btn-primary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

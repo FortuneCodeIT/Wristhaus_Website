@@ -525,6 +525,7 @@
         }
         
         .btn-sm {
+            
             padding: 0.3rem 0.8rem;
             font-size: 0.8rem;
         }
@@ -688,6 +689,28 @@
             margin-bottom: 1.5rem;
         }
       
+        /* Search Box Styles */
+.form-control {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-1);
+    color: var(--cream);
+    font-size: 0.9rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+.form-control::placeholder {
+    color: var(--cream-muted);
+    opacity: 0.7;
+}
         
         /* ===== RESPONSIVE ===== */
         

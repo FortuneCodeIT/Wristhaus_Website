@@ -1,27 +1,86 @@
 {% extends 'admin/base_admin.html' %}
+{% load static %}
 
-{% block title %}Order #{{ cart.id }}{% endblock %}
-{% block header %}Order #{{ cart.id }}{% endblock %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+{% block header %}Order #{{ order.id }}{% endblock %}
 
 {% block content %}
 <div class="admin-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <!-- Order Information -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <div>
             <p style="color: var(--cream-muted);">
-                <strong>Order Date:</strong> {{ cart.created_at|date:"F d, Y H:i" }}
+                <strong>Order Date:</strong> {{ order.created_at|date:"F d, Y H:i" }}
             </p>
             <p style="color: var(--cream-muted);">
-                <strong>Session ID:</strong> {{ cart.session_key }}
+                <strong>Customer:</strong> 
+                {% if order.user %}
+                    {{ order.user.username }} ({{ order.user.email }})
+                {% else %}
+                    <span style="color: var(--cream-muted);">Guest User</span>
+                {% endif %}
+            </p>
+            <p style="color: var(--cream-muted);">
+                <strong>Session:</strong> {{ order.session_key|default:"N/A" }}
+            </p>
+            <p style="color: var(--cream-muted); margin-top: 10px;">
+                <strong>Current Status:</strong> 
+                <span class="status-badge {% if order.status == 'completed' %}in-stock{% elif order.status == 'pending' %}low-stock{% elif order.status == 'processing' %}processing{% else %}out-of-stock{% endif %}" 
+                      style="font-size: 1rem; padding: 0.4rem 1rem;">
+                    {{ order.get_status_display }}
+                </span>
             </p>
         </div>
-        <div>
-            <h3 style="color: var(--gold);">Total: ₦{{ total }}</h3>
+        <div style="text-align: right;">
+            <h3 style="color: var(--gold);">Total: ₦{{ order.total_price }}</h3>
+            <p style="color: var(--cream-muted);">Items: {{ order.total_items }}</p>
         </div>
     </div>
     
+    <!-- ✅ STATUS CONTROL BUTTONS -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1rem; background: rgba(212, 175, 55, 0.05); border-radius: var(--radius-1); border: 1px solid var(--gold-dark);">
+        <span style="color: var(--cream-deep); font-weight: 600; margin-right: 10px; display: flex; align-items: center;">
+            <i class="fas fa-cog" style="margin-right: 8px;"></i> Update Status:
+        </span>
+        
+        {% if order.status == 'pending' %}
+            <a href="{% url 'admin_order_process' order.id %}" class="btn btn-warning" 
+               onclick="return confirm('Mark this order as Processing?')">
+                <i class="fas fa-spinner"></i> Mark as Processing
+            </a>
+            <a href="{% url 'admin_order_approve' order.id %}" class="btn btn-success" 
+               onclick="return confirm('Mark this order as Completed?')">
+                <i class="fas fa-check"></i> Mark as Completed
+            </a>
+            <a href="{% url 'admin_order_cancel' order.id %}" class="btn btn-danger" 
+               onclick="return confirm('Cancel this order? This action cannot be undone.')">
+                <i class="fas fa-times"></i> Cancel Order
+            </a>
+        {% elif order.status == 'processing' %}
+            <a href="{% url 'admin_order_approve' order.id %}" class="btn btn-success" 
+               onclick="return confirm('Mark this order as Completed?')">
+                <i class="fas fa-check"></i> Mark as Completed
+            </a>
+            <a href="{% url 'admin_order_cancel' order.id %}" class="btn btn-danger" 
+               onclick="return confirm('Cancel this order? This action cannot be undone.')">
+                <i class="fas fa-times"></i> Cancel Order
+            </a>
+        {% elif order.status == 'completed' %}
+            <span style="color: #28a745; padding: 0.5rem 1.5rem; background: rgba(40, 167, 69, 0.15); border-radius: var(--radius-1); border: 1px solid #28a745;">
+                <i class="fas fa-check-circle"></i> Order is Completed
+            </span>
+        {% elif order.status == 'cancelled' %}
+            <span style="color: #dc3545; padding: 0.5rem 1.5rem; background: rgba(220, 53, 69, 0.15); border-radius: var(--radius-1); border: 1px solid #dc3545;">
+                <i class="fas fa-times-circle"></i> Order is Cancelled
+            </span>
+        {% endif %}
+    </div>
+    
+    <!-- Order Items -->
     <table class="admin-table">
         <thead>
             <tr>
+                <th>#</th>
                 <th>Product</th>
                 <th>Price</th>
                 <th>Quantity</th>
@@ -31,35 +90,106 @@
         <tbody>
             {% for item in items %}
             <tr>
+                <td>{{ forloop.counter }}</td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        {% if item.product.image %}
-                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image-small">
-                        {% endif %}
-                        <strong style="color: var(--cream);">{{ item.product.name }}</strong>
-                    </div>
+                    <strong style="color: var(--cream);">{{ item.product_name }}</strong>
                 </td>
-                <td>₦{{ item.product.price }}</td>
+                <td>₦{{ item.price }}</td>
                 <td>{{ item.quantity }}</td>
-                <td><strong style="color: var(--gold);">₦{{ item.get_total_price }}</strong></td>
+                <td><strong style="color: var(--gold);">₦{{ item.subtotal }}</strong></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: var(--cream-muted); padding: 2rem;">
+                    No items found in this order.
+                </td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" style="text-align: right; font-weight: 600; color: var(--cream);">Total:</td>
-                <td style="font-weight: 600; color: var(--gold); font-size: 1.2rem;">₦{{ total }}</td>
+                <td colspan="4" style="text-align: right; font-weight: 600; color: var(--cream); font-size: 1.1rem;">Total:</td>
+                <td style="font-weight: 700; color: var(--gold); font-size: 1.3rem;">₦{{ order.total_price }}</td>
             </tr>
         </tfoot>
     </table>
     
-    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gold-dark);">
+    <!-- Action Buttons -->
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gold-dark); display: flex; gap: 1rem; flex-wrap: wrap;">
         <a href="{% url 'admin_orders' %}" class="btn btn-primary">
             <i class="fas fa-arrow-left"></i> Back to Orders
         </a>
-        <a href="{% url 'admin_order_delete' cart.id %}" class="btn btn-danger" style="margin-left: 0.5rem;">
+        <a href="{% url 'admin_order_delete' order.id %}" class="btn btn-danger" 
+           onclick="return confirm('Delete this order permanently? This cannot be undone.')">
             <i class="fas fa-trash"></i> Delete Order
         </a>
     </div>
 </div>
+
+<style>
+.status-badge.processing {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #1a1a1a;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-success:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+</style>
 {% endblock %}

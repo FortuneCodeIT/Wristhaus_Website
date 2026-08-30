@@ -1,0 +1,625 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Petit+Formal+Script&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link rel="icon" href="{% static 'images/wristhaus_logo.png' %}">
+    <title>Track Order - Wristhaus</title>
+</head>
+
+<style>
+.track-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.track-form {
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-1);
+    padding: 2rem;
+}
+
+.order-details {
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-1);
+    padding: 2rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--gold-dark);
+    border-radius: 4px;
+    color: var(--cream-muted);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.4rem 1.2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-pending {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.status-processing {
+    background: rgba(23, 162, 184, 0.2);
+    color: #17a2b8;
+    border: 1px solid #17a2b8;
+}
+
+.status-shipped {
+    background: rgba(0, 123, 255, 0.2);
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.status-completed {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.status-cancelled {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+/* Timeline */
+.status-timeline {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-1);
+}
+
+.timeline-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    padding: 0 10px;
+}
+
+.timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+}
+
+.step-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gold-dark);
+    border: 3px solid var(--bg);
+    transition: background 0.3s;
+}
+
+.timeline-step.active .step-dot {
+    background: var(--gold);
+}
+
+.step-label {
+    color: var(--cream-muted);
+    font-size: 0.65rem;
+    margin-top: 0.5rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.timeline-progress {
+    position: relative;
+    height: 4px;
+    background: var(--gold-dark);
+    border-radius: 2px;
+    margin: -12px 20px 0 20px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.8s ease;
+}
+
+/* Customer Info */
+.customer-info {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-1);
+}
+
+.customer-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.customer-info-grid .label {
+    color: var(--cream-muted);
+    font-size: 0.8rem;
+}
+
+.customer-info-grid .value {
+    color: var(--cream-deep);
+}
+
+/* Order Items */
+.order-items {
+    margin-top: 1.5rem;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item-name {
+    color: var(--cream-deep);
+}
+
+.order-item-qty {
+    color: var(--cream-muted);
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
+}
+
+.order-item-price {
+    color: var(--gold);
+    font-weight: 500;
+}
+
+.order-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    margin-top: 0.5rem;
+    border-top: 2px solid var(--gold);
+}
+
+.order-total-label {
+    color: var(--cream-deep);
+    font-weight: 600;
+}
+
+.order-total-amount {
+    color: var(--gold);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+/* Actions */
+.order-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--gold-dark);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    color: var(--cream-deep);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--cream-muted);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .track-form form > div {
+        flex-direction: column;
+    }
+    
+    .timeline-steps {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .step-label {
+        font-size: 0.5rem;
+        white-space: normal;
+    }
+    
+    .customer-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .order-details {
+        padding: 1rem;
+    }
+    
+    .track-form {
+        padding: 1rem;
+    }
+}
+</style>
+
+<body>
+    <!-- Header -->
+    <header class="site">
+        <div class="wrap nav-row">
+            <a href="{% url 'index' %}" class="logo">
+                <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
+                <span>
+                    <span class="word">Wristhaus</span>
+                </span>
+            </a>
+
+            <nav class="main" id="desktop-nav">
+                <a href="{% url 'index' %}">Home</a>
+                <a href="{% url 'shop' %}">Shop</a>
+                <a href="{% url 'collections' %}">Collections</a>
+                <a href="{% url 'about' %}">About Us</a>
+                <a href="{% url 'contact' %}">Contact</a>
+                <a href="{% url 'track_order' %}" class="active">Track Order</a>
+                {% if user.is_authenticated and user.is_superuser %}
+                <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+                {% endif %}
+            </nav>
+
+            <nav class="main-mobile" id="mobile-nav">
+                <div class="nav-header">
+                    <img src="{% static 'images/wristhaus_logo.png' %}" alt="">
+                    <div>
+                        <div class="logo-text">Wristhaus</div>
+                    </div>
+                </div>
+                <ul>
+                    <li><a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="{% url 'shop' %}"><i class="fas fa-store"></i> Shop</a></li>
+                    <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
+                    <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
+                    <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+                    <li><a href="{% url 'track_order' %}" class="active"><i class="fas fa-truck"></i> Track Order</a></li>
+                    {% if user.is_authenticated and user.is_superuser %}
+                    <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'cart_page' %}">
+                        <i class="fas fa-shopping-cart"></i> Cart <span class="badge">{{ cart_count|default:0 }}</span>
+                    </a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-icons">
+                <a href="{% url 'cart_page' %}" aria-label="Cart">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M6 6h15l-1.5 9h-12z"/>
+                        <path d="M6 6 5 3H2"/>
+                        <circle cx="9" cy="20" r="1.4"/>
+                        <circle cx="18" cy="20" r="1.4"/>
+                    </svg>
+                    <span class="cart-count">{{ cart_count|default:0 }}</span>
+                </a>
+                <div class="bar-wrapper" id="openNav">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </div>
+        <div class="nav-overlay"></div>
+    </header>
+
+    {% block content %}
+    <div class="page-header" data-aos="fade-down">
+        <div class="wrap">
+            <span class="eyebrow">Track Your Order</span>
+            <h1>Order Tracking</h1>
+            <p style="color: var(--cream-muted);">Enter your order number to track your order status</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="wrap">
+            <div class="track-container" data-aos="fade-up">
+                <!-- Search Form -->
+                <div class="track-form">
+                    <form method="GET" action="">
+                        <div style="display: flex; gap: 1rem; max-width: 500px; margin: 0 auto;">
+                            <input type="text" 
+                                   name="order_number" 
+                                   class="form-control" 
+                                   placeholder="Enter order number (e.g., WH-XXXXXXX)" 
+                                   value="{{ order_number }}" 
+                                   style="flex: 1;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Track
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {% if order %}
+                <!-- ✅ Order Found -->
+                <div class="order-details" style="margin-top: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gold-dark);">
+                        <div>
+                            <h2 style="color: var(--cream-deep);">Order #{{ order.order_number }}</h2>
+                            <p style="color: var(--cream-muted);">Placed on {{ order.created_at|date:"F d, Y H:i" }}</p>
+                        </div>
+                        <div>
+                            <span class="status-badge 
+                                {% if order.status == 'completed' %}status-completed
+                                {% elif order.status == 'processing' %}status-processing
+                                {% elif order.status == 'shipped' %}status-shipped
+                                {% elif order.status == 'cancelled' %}status-cancelled
+                                {% else %}status-pending{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ✅ Status Timeline -->
+                    <!-- <div class="status-timeline">
+                        <div class="timeline-steps">
+                            <div class="timeline-step {% if order.status == 'pending' or order.status == 'processing'  or order.status == 'completed' %}active{% endif %}">
+                                <div class="step-dot"></div>
+                                <span class="step-label">⏳ Pending</span>
+                            </div>
+                            <div class="timeline-step {% if order.status == 'processing' or order.status == 'completed' %}active{% endif %}">
+                                <div class="step-dot"></div>
+                                <span class="step-label">🔄 Processing</span>
+                            </div>
+
+                            <div class="timeline-step {% if order.status == 'completed' %}active{% endif %}">
+                                <div class="step-dot"></div>
+                                <span class="step-label">✅ Completed</span>
+                            </div>
+                        </div>
+                        <div class="timeline-progress">
+                            <div class="progress-bar" style="width: 
+                                {% if order.status == 'pending' %}10
+                                {% elif order.status == 'processing' %}35
+                                {% elif order.status == 'shipped' %}70
+                                {% elif order.status == 'completed' %}100
+                                {% elif order.status == 'cancelled' %}100
+                                {% else %}0
+                                {% endif %}%; 
+                                background: 
+                                {% if order.status == 'pending' %}#ffc107
+                                {% elif order.status == 'processing' %}#17a2b8
+                                {% elif order.status == 'shipped' %}#007bff
+                                {% elif order.status == 'completed' %}#28a745
+                                {% elif order.status == 'cancelled' %}#dc3545
+                                {% else %}#d4af37{% endif %};">
+                            </div>
+                        </div>
+                        {% if order.status == 'cancelled' %}
+                        <div style="text-align: center; margin-top: 0.5rem;">
+                            <span style="color: #dc3545; font-weight: 600;">
+                                <i class="fas fa-times-circle"></i> This order has been cancelled
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div> -->
+
+                    <!-- ✅ Customer Info -->
+                    <div class="customer-info">
+                        <div class="customer-info-grid">
+                            <div>
+                                <span class="label">Customer</span>
+                                <p class="value">
+                                    {% if order.user %}
+                                        {{ order.user.username }}
+                                    {% else %}
+                                        Guest
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div>
+                                <span class="label">Total Items</span>
+                                <p class="value">{{ order.total_items }}</p>
+                            </div>
+                            <div>
+                                <span class="label">Order Date</span>
+                                <p class="value">{{ order.created_at|date:"M d, Y" }}</p>
+                            </div>
+                            <div>
+                                <span class="label">Status</span>
+                                <p class="value" style="color: 
+                                    {% if order.status == 'completed' %}#28a745
+                                    {% elif order.status == 'cancelled' %}#dc3545
+                                    {% elif order.status == 'processing' %}#17a2b8
+                                    {% elif order.status == 'shipped' %}#007bff
+                                    {% else %}#ffc107{% endif %};">
+                                    {{ order.get_status_display }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ Order Items -->
+                    <div class="order-items">
+                        <h3 style="color: var(--cream-deep); margin-bottom: 1rem; font-size: 1.1rem;">Order Items</h3>
+                        <div style="background: rgba(0, 0, 0, 0.2); border-radius: var(--radius-1); overflow: hidden;">
+                            {% for item in order.items %}
+                            <div class="order-item">
+                                <div>
+                                    <span class="order-item-name">{{ item.product_name }}</span>
+                                    <span class="order-item-qty">x{{ item.quantity }}</span>
+                                </div>
+                                <span class="order-item-price">₦{{ item.subtotal }}</span>
+                            </div>
+                            {% empty %}
+                            <div style="padding: 1rem; text-align: center; color: var(--cream-muted);">
+                                No items found in this order.
+                            </div>
+                            {% endfor %}
+                            <div class="order-total">
+                                <span class="order-total-label">Total</span>
+                                <span class="order-total-amount">₦{{ order.total_price }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ Actions -->
+                    <div class="order-actions">
+                        <a href="{% url 'shop' %}" class="btn btn-primary">
+                            <i class="fas fa-shopping-bag"></i> Continue Shopping
+                        </a>
+                        <a href="{% url 'track_order' %}" class="btn btn-outline">
+                            <i class="fas fa-search"></i> Track Another Order
+                        </a>
+                        {% if order.status != 'completed' and order.status != 'cancelled' %}
+                        <button onclick="window.print()" class="btn btn-outline">
+                            <i class="fas fa-print"></i> Print Order
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% elif error %}
+                <!-- ❌ Error Message -->
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; border-radius: var(--radius-1); text-align: center;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #dc3545;"></i>
+                    <h3 style="color: #dc3545; margin-top: 0.5rem;">Order Not Found</h3>
+                    <p style="color: var(--cream-muted);">{{ error }}</p>
+                    <p style="color: var(--cream-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> Please check your order number and try again.
+                    </p>
+                    <a href="{% url 'track_order' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-search"></i> Try Again
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <footer class="site" style="border-top: 1px solid var(--gold); padding-top: 40px;">
+        <div class="wrap">
+            <div class="footer-grid">
+                <div class="footer-col footer-newsletter">
+                    <h4>Stay Connected</h4>
+                    <p>Get updates on new arrivals, offers and more.</p>
+                    <form class="footer-newsletter-form">
+                        <input type="email" placeholder="Enter your email" required aria-label="Email address" disabled>
+                        <button type="submit">Subscribe</button>
+                    </form>
+                </div>
+                <div class="footer-col">
+                    <h4>Shop</h4>
+                    <ul>
+                        <li><a href="{% url 'shop' %}">All Wristhaus</a></li>
+                        <li><a href="{% url 'collections' %}">Collections</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="{% url 'about' %}">About Us</a></li>
+                        <li><a href="{% url 'contact' %}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact Us</h4>
+                    <ul>
+                        <li><span><a href="https://wa.me/2347041108651" target="_blank" aria-label="WhatsApp">WhatsApp: +2347041108651</a></span></li>
+                        <li><span>Email: officialwristhaus@gmail.com</span></li>
+                    </ul>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Instagram">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <rect x="3" y="3" width="18" height="18" rx="5"/>
+                                <circle cx="12" cy="12" r="4"/>
+                                <circle cx="17.5" cy="6.5" r="1"/>
+                            </svg>
+                        </a>
+                        <a href="#" aria-label="Facebook">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <path d="M15 8h2V5h-2a4 4 0 0 0-4 4v2H9v3h2v7h3v-7h2.5L17 11h-3V9a1 1 0 0 1 1-1Z"/>
+                            </svg>
+                        </a>
+                        <a href="#" aria-label="TikTok">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <path d="M14 4v10.5a3 3 0 1 1-2.5-3"/>
+                                <path d="M14 4c.4 2 2 3.5 4 3.8"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">© 2026 Wristhaus . All Rights Reserved.</div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp FAB -->
+    <a href="https://wa.me/2347041108651" class="whatsapp-fab" aria-label="Chat on WhatsApp" target="_blank" data-aos="flip-up">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.6 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 1-2.3.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.9.3.1.4.2.5.3.1.2.1.9-.1 1.4Z"/>
+        </svg>
+    </a>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: false,
+            offset: 100,
+            delay: 0,
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.refresh();
+        });
+
+        window.addEventListener('load', function() {
+            AOS.refresh();
+        });
+    </script>
+    {% endblock %}
+</body>
+</html>

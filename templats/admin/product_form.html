@@ -43,7 +43,7 @@
             {% if product and product.image %}
             <div style="margin-top: 0.5rem;">
                 <small style="color: var(--cream-muted);">Current image:</small>
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width: 100px; max-height: 100px; display: block; margin-top: 0.5rem; border-radius: 4px;">
+                <img src="{{ product.get_image_url }}" alt="{{ product.name }}" style="max-width: 100px; max-height: 100px; display: block; margin-top: 0.5rem; border-radius: 4px;">
             </div>
             {% endif %}
         </div>

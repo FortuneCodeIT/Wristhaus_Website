@@ -1,5 +1,7 @@
+import uuid
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.utils.text import slugify
 
 
@@ -108,4 +110,76 @@ class ClientReview(models.Model):
         return f"{self.name} - {self.rating} stars"
     
     
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
     
+    order_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
+      
+    # User who placed the order (if logged in)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Session key for guest users
+    session_key = models.CharField(max_length=40, null=True, blank=True)
+    
+    # Order items stored as JSON
+    items = models.JSONField(default=list)
+    
+    # Order totals
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_items = models.IntegerField(default=0)
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    
+    def save(self, *args, **kwargs):
+    # Generate unique order number if not set
+        if not self.order_number:
+            self.order_number = f"WH-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+        
+    def get_status_display_custom(self):
+        """Get status with emoji"""
+        status_map = {
+            'pending': '⏳ Pending',
+            'processing': '🔄 Processing',
+            'completed': '✅ Completed',
+            'cancelled': '❌ Cancelled',
+        }
+        return status_map.get(self.status, self.status)
+    
+    def get_status_color(self):
+        """Get status color for frontend"""
+        color_map = {
+            'pending': '#ffc107',
+            'processing': '#17a2b8',
+            'completed': '#28a745',
+            'cancelled': '#dc3545',
+        }
+        return color_map.get(self.status, '#6c757d')
+  
+    
+    def __str__(self):
+        return f"Order #{self.id} - {self.get_status_display()}"
+    
+    def get_status_order(self):
+        """Get the order index of current status for timeline"""
+        status_order = ['pending', 'processing', 'completed', 'cancelled']
+        try:
+            return status_order.index(self.status)
+        except ValueError:
+            return 0
+    
+    class Meta:
+        ordering = ['-created_at']
+        

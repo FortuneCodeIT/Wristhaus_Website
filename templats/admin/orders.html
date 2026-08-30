@@ -1,17 +1,83 @@
 {% extends 'admin/base_admin.html' %}
+{% load static %}
 
 {% block title %}Orders{% endblock %}
 {% block header %}Orders{% endblock %}
 
 {% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <p style="color: var(--cream-muted);">
+        Total Orders: <strong style="color: var(--gold);">{{ total_orders }}</strong>
+    </p>
+
+    <!-- ✅ Search Results Info -->
+{% if search_query %}
+    <div style=" padding: 0.5rem 1rem; background: rgba(212, 175, 55, 0.1); border-radius: var(--radius-1); border-left: 3px solid var(--gold);">
+        <p style="color: var(--cream-muted); margin: 0;">
+            <i class="fas fa-search"></i> Showing results for: "<strong style="color: var(--gold);">{{ search_query }}</strong>"
+            <a href="{% url 'admin_orders' %}" style="color: var(--cream-muted); margin-left: 1rem; text-decoration: underline;">
+                Clear search
+            </a>
+        </p>
+    </div>
+{% endif %}
+
+        <!-- ✅ Search Bar -->
+    <form method="GET" action="" style="display: flex; gap: 0.5rem; flex: 1; max-width: 500px;">
+        <div style="position: relative; flex: 1;">
+            <input type="text" 
+                   name="search" 
+                   class="form-control" 
+                   placeholder="Search orders by number, customer, or total..." 
+                   value="{{ search_query }}"
+                   style="padding-right: 35px;">
+            {% if search_query %}
+                <a href="{% url 'admin_orders' %}" 
+                   style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--cream-muted); text-decoration: none;">
+                    <i class="fas fa-times"></i>
+                </a>
+            {% else %}
+                <button type="submit" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--cream-muted); cursor: pointer;">
+                    <i class="fas fa-search"></i>
+                </button>
+            {% endif %}
+        </div>
+        <a href="{% url 'admin_orders' %}" class="btn btn-sm btn-outline" style="white-space: nowrap;">
+            <i class="fas fa-sync"></i> Reset
+        </a>
+    </form>
+
+</div>
+
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; padding: 1rem;"">
+        <a href="?status=all" class="btn btn-sm {% if not status_filter or status_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}">
+            All
+        </a>
+        <a href="?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline{% endif %}">
+            ⏳ Pending
+        </a>
+        <a href="?status=processing" class="btn btn-sm {% if status_filter == 'processing' %}btn-primary{% else %}btn-outline{% endif %}">
+            🔄 Processing
+        </a>
+        <a href="?status=completed" class="btn btn-sm {% if status_filter == 'completed' %}btn-primary{% else %}btn-outline{% endif %}">
+            ✅ Completed
+        </a>
+        <a href="?status=cancelled" class="btn btn-sm {% if status_filter == 'cancelled' %}btn-primary{% else %}btn-outline{% endif %}">
+            ❌ Cancelled
+        </a>
+    </div>
+
+
 <div class="admin-card">
     {% if orders %}
     <table class="admin-table">
         <thead>
             <tr>
-                <th>Order ID</th>
+                <th>Order #</th>
+                <th>Customer</th>
                 <th>Items</th>
                 <th>Total</th>
+                <th>Status</th>
                 <th>Date</th>
                 <th>Actions</th>
             </tr>
@@ -19,16 +85,30 @@
         <tbody>
             {% for order in orders %}
             <tr>
-                <td>#{{ order.cart.id }}</td>
-                <td>{{ order.item_count }} items</td>
-                <td><strong style="color: var(--gold);">₦{{ order.total }}</strong></td>
-                <td>{{ order.cart.created_at|date:"M d, Y H:i" }}</td>
+                <td><strong style="color: var(--cream);">#{{ order.id }}</strong></td>
+                <td>
+                    {% if order.user %}
+                        {{ order.user.username }}
+                        <br><small style="color: var(--cream-muted);">{{ order.user.email }}</small>
+                    {% else %}
+                        <span style="color: var(--cream-muted);">Guest</span>
+                    {% endif %}
+                </td>
+                <td>{{ order.total_items }} items</td>
+                <td><strong style="color: var(--gold);">₦{{ order.total_price }}</strong></td>
+                <td>
+                    <span class="status-badge {% if order.status == 'completed' %}in-stock{% elif order.status == 'pending' %}low-stock{% elif order.status == 'processing' %}processing{% else %}out-of-stock{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
                 <td>
                     <div class="btn-group">
-                        <a href="{% url 'admin_order_detail' order.cart.id %}" class="btn btn-sm btn-primary">
+                        <a href="{% url 'admin_order_detail' order.id %}" class="btn btn-sm btn-primary">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="{% url 'admin_order_delete' order.cart.id %}" class="btn btn-sm btn-danger">
+
+                        <a href="{% url 'admin_order_delete' order.id %}" class="btn btn-sm btn-danger">
                             <i class="fas fa-trash"></i>
                         </a>
                     </div>
@@ -39,27 +119,35 @@
     </table>
     
     <!-- Pagination -->
-    {% if carts.has_other_pages %}
+    {% if orders.has_other_pages %}
     <div class="pagination">
-        {% if carts.has_previous %}
-        <a href="?page=1">&laquo; First</a>
-        <a href="?page={{ carts.previous_page_number }}">Previous</a>
+        {% if orders.has_previous %}
+        <a href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}">&laquo; First</a>
+        <a href="?page={{ orders.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
         {% endif %}
         
-        <span class="current">Page {{ carts.number }} of {{ carts.paginator.num_pages }}</span>
+        <span class="current">Page {{ orders.number }} of {{ orders.paginator.num_pages }}</span>
         
-        {% if carts.has_next %}
-        <a href="?page={{ carts.next_page_number }}">Next</a>
-        <a href="?page={{ carts.paginator.num_pages }}">Last &raquo;</a>
+        {% if orders.has_next %}
+        <a href="?page={{ orders.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+        <a href="?page={{ orders.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last &raquo;</a>
         {% endif %}
     </div>
     {% endif %}
     
     {% else %}
-    <p style="color: var(--cream-muted); text-align: center; padding: 3rem;">
-        <i class="fas fa-shopping-bag" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
-        No orders found.
-    </p>
+    <div style="text-align: center; padding: 3rem;">
+        <i class="fas fa-shopping-bag" style="font-size: 3rem; color: var(--gold); display: block; margin-bottom: 1rem;"></i>
+        <h3 style="color: var(--cream-deep);">No Orders Found</h3>
+        <p style="color: var(--cream-muted);">Orders will appear here once customers place them.</p>
+    </div>
     {% endif %}
 </div>
+
+<style>
+.status-badge.processing {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+</style>
 {% endblock %}

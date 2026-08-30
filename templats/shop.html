@@ -21,7 +21,224 @@
   }
  
 
- 
+/* ===========================================================
+   CUSTOM POPUP / TOAST NOTIFICATION
+=========================================================== */
+.custom-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(4px);
+}
+
+.custom-popup {
+    background: var(--bg);
+    max-width: 400px;
+    width: 90%;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid var(--gold);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+.custom-popup .popup-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.custom-popup .popup-icon.success {
+    color: #28a745;
+}
+
+.custom-popup .popup-icon.error {
+    color: #dc3545;
+}
+
+.custom-popup .popup-icon.warning {
+    color: #ffc107;
+}
+
+.custom-popup .popup-title {
+    color: var(--cream-deep);
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-family: var(--display);
+}
+
+.custom-popup .popup-message {
+    color: var(--cream-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.custom-popup .popup-btn {
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    padding: 0.7rem 2rem;
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-family: var(--sans);
+    min-width: 100px;
+}
+
+.custom-popup .popup-btn:hover {
+    background: var(--gold-dark);
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.custom-popup .popup-btn.success-btn {
+    background: #28a745;
+    color: white;
+}
+
+.custom-popup .popup-btn.success-btn:hover {
+    background: #218838;
+}
+
+.custom-popup .popup-btn.error-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.custom-popup .popup-btn.error-btn:hover {
+    background: #c82333;
+}
+
+/* Close button */
+.custom-popup .popup-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--cream-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.3s;
+    padding: 5px;
+}
+
+.custom-popup .popup-close:hover {
+    color: var(--gold);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Toast notification (alternative) */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-1);
+    padding: 1rem 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideInRight 0.5s ease;
+    max-width: 400px;
+}
+
+.toast-notification .toast-icon {
+    font-size: 1.5rem;
+}
+
+.toast-notification .toast-icon.success {
+    color: #28a745;
+}
+
+.toast-notification .toast-icon.error {
+    color: #dc3545;
+}
+
+.toast-notification .toast-message {
+    color: var(--cream-muted);
+    font-size: 0.9rem;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-popup {
+        padding: 1.5rem;
+        width: 95%;
+    }
+    
+    .custom-popup .popup-icon {
+        font-size: 2.5rem;
+    }
+    
+    .custom-popup .popup-title {
+        font-size: 1.1rem;
+    }
+    
+    .toast-notification {
+        bottom: 15px;
+        right: 15px;
+        left: 15px;
+        max-width: none;
+    }
+}
 
 /* Responsive Search */
 @media (max-width: 768px) {
@@ -116,6 +333,7 @@
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
+      <a href="{% url 'track_order' %}">Track Order</a>
              {% if user.is_authenticated and user.is_superuser %}
       <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
         {% endif %}
@@ -138,6 +356,9 @@
         <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
         <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
         <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+        <li><a href="{% url 'track_order' %}"><i class="fas fa-truck"></i> Track Order</a></li>
+
+        
         {% if user.is_authenticated and user.is_superuser %}
         <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
         {% endif %}
@@ -433,7 +654,7 @@
       <div class="footer-col">
         <h4>Contact Us</h4>
         <ul>
-          <li><span>WhatsApp: +92 300 1234567</span></li>
+          <li><span><a href="https://wa.me/2347041108651" target="_blank" aria-label="WhatsApp">WhatsApp: +2347041108651</a></span></li>
           <li><span>Email: officialwristhaus@gmail.com</span></li>
         </ul>
         <div class="footer-social">
@@ -447,7 +668,8 @@
   </div>
 </footer>
 
-<a href="https://wa.me/2347030816894" class="whatsapp-fab" aria-label="Chat on WhatsApp" target="_blank" data-aos="flip-up" data-aos-delay="{{ forloop.counter0|add:400 }}">
+
+<a href="https://wa.me/2347041108651" class="whatsapp-fab" aria-label="Chat on WhatsApp" target="_blank" data-aos="flip-up" data-aos-delay="{{ forloop.counter0|add:400 }}">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm5.6 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 1-2.3.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.9.3.1.4.2.5.3.1.2.1.9-.1 1.4Z"/></svg>
 </a>
 
@@ -490,108 +712,67 @@ $(document).ready(function() {
     console.log('Buy Now buttons found:', $('.buy-now-btn').length);
     
     // Add to Cart functionality
-    $('.add-to-cart-btn, .buy-now-btn').click(function(e) {
-        e.preventDefault();
-        
-        console.log('===== BUTTON CLICKED =====');
-        
-        // Get product ID from data attribute
-        const productId = $(this).data('product-id');
-        const isBuyNow = $(this).hasClass('buy-now-btn');
-        const $button = $(this);
-        
-        console.log('Product ID from data attribute:', productId);
-        console.log('Product ID type:', typeof productId);
-        console.log('Is Buy Now:', isBuyNow);
-        console.log('Button HTML:', $(this).html());
-        
-        // Check if product ID exists
-        if (!productId || productId === undefined || productId === null) {
-            console.error('Product ID is missing!');
-            alert('Error: Product ID not found. Please refresh the page and try again.');
-            return;
-        }
-        
-        // Also check for product ID in parent elements (fallback)
-        let productIdFallback = $(this).closest('.card').data('product-id');
-        console.log('Fallback product ID from card:', productIdFallback);
-        
-        // Use fallback if needed
-        const finalProductId = productId || productIdFallback;
-        console.log('Final product ID to use:', finalProductId);
-        
-        // Disable button while processing
-        $button.prop('disabled', true);
-        $button.text('Adding...');
-        
-        const requestData = {
-            product_id: parseInt(finalProductId),
+  $('.add-to-cart-btn, .buy-now-btn').click(function(e) {
+    e.preventDefault();
+    
+    const productId = $(this).data('product-id');
+    const isBuyNow = $(this).hasClass('buy-now-btn');
+    const $button = $(this);
+    
+    if (!productId) {
+        showPopup('error', 'Error', 'Product ID not found. Please refresh and try again.', 'OK');
+        return;
+    }
+    
+    // Disable button while processing
+    $button.prop('disabled', true);
+    const originalHtml = $button.html();
+    $button.html('<i class="fas fa-spinner fa-spin"></i> Adding...');
+    
+    $.ajax({
+        url: "{% url 'add_to_cart' %}",
+        method: 'POST',
+        data: JSON.stringify({
+            product_id: parseInt(productId),
             quantity: 1
-        };
+        }),
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        contentType: 'application/json',
+        timeout: 10000,
+success: function(response) {
+    if (response.success) {
+        // Update cart count
+        $('.cart-count').text(response.cart_count);
         
-        console.log('Sending data to server:', requestData);
+        // ✅ Show toast notification instead of popup
+        showToast('success', response.message);
         
-        // Show loading indicator
-        $button.html('<i class="fas fa-spinner fa-spin"></i> Adding...');
-        
-        $.ajax({
-            url: "{% url 'add_to_cart' %}",
-            method: 'POST',
-            data: JSON.stringify(requestData),
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            },
-            contentType: 'application/json',
-            success: function(response) {
-                console.log('===== AJAX SUCCESS =====');
-                console.log('Response received:', response);
-                
-                if (response.success) {
-                    // Update cart count
-                    const cartCount = response.cart_count;
-                    console.log('Updating cart count to:', cartCount);
-                    $('.cart-count').text(cartCount);
-                    
-                    //Show success message
-                    alert(response.message);
-                    
-                    if (isBuyNow) {
-                        console.log('Redirecting to cart page...');
-                        window.location.href = "{% url 'cart_page' %}";
-                    }
-                } else {
-                    console.error('Error in response:', response.error);
-                    alert('Error: ' + response.error);
-                }
-                
-                // Re-enable button
-                $button.prop('disabled', false);
-                $button.html('<i class="fas fa-cart-plus"></i> Add to Cart');
-            },
-            error: function(xhr, status, error) {
-                console.log('===== AJAX ERROR =====');
-                console.error('Status:', status);
-                console.error('Error:', error);
-                console.error('Response Text:', xhr.responseText);
-                console.error('Status Code:', xhr.status);
-                
-                let errorMessage = 'An error occurred. ';
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    console.error('Parsed error response:', response);
-                    if (response.error) {
-                        errorMessage += response.error;
-                    } else {
-                        errorMessage += 'Please try again.';
-                    }
-                } catch(e) {
-                    console.error('Could not parse error response:', e);
-                    errorMessage += 'Please check the console for details.';
-                }
-                
-                alert(errorMessage);
-                
+        if (isBuyNow) {
+            setTimeout(function() {
+                window.location.href = "{% url 'cart_page' %}";
+            }, 1500);
+        }
+    } else {
+        showToast('error', response.error || 'Could not add item to cart.');
+    }
+            
+            // Re-enable button
+            $button.prop('disabled', false);
+            $button.html(originalHtml);
+        },
+        error: function(xhr) {
+            console.error('Error:', xhr);
+            
+            let errorMsg = 'An error occurred. Please try again.';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            }
+            
+            showPopup('error', 'Error', errorMsg, 'OK');
+            
                 // Re-enable button
                 $button.prop('disabled', false);
                 $button.html('<i class="fas fa-cart-plus"></i> Add to Cart');

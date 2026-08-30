@@ -10,10 +10,12 @@ urlpatterns = [
     path('cart/', views.cart_page, name='cart_page'),
     path('add-to-cart/', views.add_to_cart, name='add_to_cart'),
     path('delete-from-cart/', views.delete_from_cart, name='delete_from_cart'),
+    path('delete-all-from-cart/', views.delete_all_from_cart, name='delete_all_from_cart'),
     path('checkout/', views.checkout_to_whatsapp, name='checkout_to_whatsapp'),
     path('collections/', views.collections, name='collections'),
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
+    path('track-order/', views.track_order, name='track_order'),
     path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
     
 
@@ -40,7 +42,10 @@ urlpatterns = [
     path('admin/products/edit/<int:product_id>/', views.admin_product_edit, name='admin_product_edit'),
     path('admin/products/delete/<int:product_id>/', views.admin_product_delete, name='admin_product_delete'),
     path('admin/orders/', views.admin_orders, name='admin_orders'),
-    path('admin/orders/detail/<int:cart_id>/', views.admin_order_detail, name='admin_order_detail'),
-    path('admin/orders/delete/<int:cart_id>/', views.admin_order_delete, name='admin_order_delete'),
+    path('admin/orders/detail/<int:order_id>/', views.admin_order_detail, name='admin_order_detail'), # ✅ Changed to order_id
+    path('admin/orders/delete/<int:order_id>/', views.admin_order_delete, name='admin_order_delete'),
+    path('admin/orders/approve/<int:order_id>/', views.admin_order_approve, name='admin_order_approve'),
+    path('admin/orders/process/<int:order_id>/', views.admin_order_process, name='admin_order_process'),
+    path('admin/orders/cancel/<int:order_id>/', views.admin_order_cancel, name='admin_order_cancel'),
 
 ]

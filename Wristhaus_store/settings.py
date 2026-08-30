@@ -101,7 +101,7 @@ if database_url:
     import dj_database_url
     DATABASES['default'] = dj_database_url.config(default=database_url, conn_max_age=600)
 
-
+# print("DATABASE_URL:", os.environ.get("DATABASE_URL"))
 
 
 # Password validation

@@ -52,6 +52,67 @@
     </div>
 </div>
 
+
+
+<!-- Recent Orders -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Recent Orders</h3>
+        <a href="{% url 'admin_orders' %}" class="btn btn-sm btn-primary">View All Orders</a>
+    </div>
+    {% if recent_orders %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <!-- <th>Customer</th> -->
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in recent_orders %}
+            <tr>
+                <td><strong style="color: var(--cream);">#{{ order.id }}</strong></td>
+                <!-- <td>
+                    {% if order.user %}
+                        {{ order.user.username }}
+                    {% else %}
+                        <span style="color: var(--cream-muted);">Guest</span>
+                    {% endif %}
+                </td> -->
+                <td>{{ order.total_items }} items</td>
+                <td><strong style="color: var(--gold);">₦{{ order.total_price }}</strong></td>
+                <td>
+                    <span class="status-badge {% if order.status == 'completed' %}in-stock{% elif order.status == 'pending' %}low-stock{% else %}out-of-stock{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <div class="btn-group">
+                        <a href="{% url 'admin_order_detail' order.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--cream-muted); text-align: center; padding: 2rem;">
+        <i class="fas fa-shopping-bag" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
+        No orders placed yet.
+    </p>
+    {% endif %}
+</div>
+
+
+
 <!-- Recent Products -->
 <div class="admin-card">
     <div class="admin-card-header">
