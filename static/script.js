@@ -301,5 +301,4 @@ let autoSlide = setInterval(nextSlide, 4000);
 
 
 
-
 });
