@@ -253,7 +253,7 @@
     <!-- Desktop Navigation -->
     <nav class="main" id="desktop-nav">
       <a href="{% url 'index' %}">Home</a>
-      <a href="{% url 'shop' %}" class="active">Shop</a>
+      <a href="{% url 'shop' %}" >Shop</a>
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
@@ -283,7 +283,7 @@
         {% if user.is_authenticated and user.is_superuser %}
         <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
         {% endif %}
-        <li><a href="{% url 'cart_page' %}">
+        <li><a href="{% url 'cart_page' %}" class="active">
             <i class="fas fa-shopping-cart"></i> Cart <span class="badge">{{ cart_count|default:0 }}</span></a></li>
       </ul>
     </nav>
