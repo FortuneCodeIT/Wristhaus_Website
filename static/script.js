@@ -58,19 +58,19 @@ openNav.addEventListener('click', () => {
     });
   }
 
-  // Contact form
-  const form = document.querySelector('.contact-form');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const msg = document.querySelector('.form-msg');
-      if (msg) {
-        msg.textContent = "Thank you — your message has been received. We'll reply within one business day.";
-        msg.classList.add('show');
-      }
-      form.reset();
-    });
-  }
+  // // Contact form
+  // const form = document.querySelector('.contact-form');
+  // if (form) {
+  //   form.addEventListener('submit', (e) => {
+      
+  //     const msg = document.querySelector('.form-msg');
+  //     if (msg) {
+  //       msg.textContent = "Thank you — your message has been received. We'll reply within one business day.";
+  //       msg.classList.add('show');
+  //     }
+  //     form.reset();
+  //   });
+  // }
 
 //   // Newsletter form(s)
 //   document.querySelectorAll('.footer-newsletter-form').forEach(nform => {

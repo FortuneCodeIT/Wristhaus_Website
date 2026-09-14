@@ -1,0 +1,56 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Delete Message{% endblock %}
+{% block header %}Delete Message{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div style="text-align: center; padding: 2rem 1rem;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 1rem;"></i>
+        
+        <h3 style="color: var(--cream-deep); margin-bottom: 0.5rem;">
+            Delete Message #{{ message.id }}?
+        </h3>
+        
+        <p style="color: var(--cream-muted); margin-bottom: 1.5rem;">
+            {% if message.subject %}
+                Message: <strong style="color: var(--gold);">{{ message.subject|default:"N/A" }}</strong><br>
+            {% else %}
+                Message: <strong style="color: var(--cream-deep);">No Subject</strong><br>
+            {% endif %}
+            {% if message.name %}
+                Sender: <strong style="color: var(--gold);">{{ message.name|default:"N/A" }}</strong><br>
+            {% else %}
+                Sender: <strong style="color: var(--cream-deep);">N/A</strong><br>
+            {% endif %}
+            {% if message.email %}
+                Email: <strong style="color: var(--gold);">{{ message.email|default:"N/A" }}</strong><br>
+            {% else %}
+                Email: <strong style="color: var(--cream-deep);">Not provided</strong><br>
+            {% endif %}
+            {% if message.phone %}
+                Phone: <strong style="color: var(--gold);">{{ message.phone|default:"N/A" }}</strong>
+            {% else %}
+                Phone: <strong style="color: var(--cream-deep);">Not provided</strong>
+            {% endif %}
+        </p>
+        
+        <p style="color: #dc3545; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            <i class="fas fa-info-circle"></i> This action cannot be undone.
+        </p>
+        
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </form>
+            <a href="{% url 'admin_messages' %}" class="btn btn-primary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

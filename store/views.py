@@ -1,7 +1,10 @@
 
+from email import message
+
+from django.core.mail import message
 from django.db import models 
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, request
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q 
 from django.contrib.auth.decorators import login_required
@@ -9,7 +12,7 @@ from django.contrib.auth import login, logout, authenticate, update_session_auth
 from django.contrib import messages
 from django.db import transaction, IntegrityError, OperationalError
 from django.views.decorators.http import require_POST
-from .models import Home_Collection, Shop_All, Cart, Order, CartItem, ClientReview
+from .models import Home_Collection, Shop_All, Cart, Order, CartItem, ClientReview, ContactMessage
 from .forms import ProductForm, ReviewForm, AdminProfileForm, AdminPasswordChangeForm  # We'll create this
 from django.utils import timezone
 import urllib.parse
@@ -627,14 +630,44 @@ def about(request):
     return render(request, 'about_us.html', context)
 
 def contact(request):
+    print("CONTACT VIEW:", request.method)
     cart = get_or_create_cart(request)
     cart_count = cart.get_total_items()
 
-    context = {
-       'cart_count': cart_count
-    }
-    return render(request, 'contact.html', context)
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        subject = request.POST.get('subject', '').strip()
+        message = request.POST.get('message', '').strip()
 
+        name = f"{first_name} {last_name}".strip()
+
+        if not first_name or not last_name or not email or not subject or not message:
+            messages.error(request, 'Please fill in all required fields.')
+            return redirect('contact') 
+        else:
+            ContactMessage.objects.create(
+                name=name,
+                email=email,
+                phone=phone,
+                subject=subject,
+                message=message
+            )
+
+            messages.success(
+                request,
+                'Your message has been sent successfully. We will get back to you shortly.'
+            )
+
+            return redirect('contact')  # Redirect to the same page to clear the form
+
+    context = {
+        'cart_count': cart_count
+    }
+
+    return render(request, 'contact.html', context)
 
 
 
@@ -657,19 +690,31 @@ def admin_dashboard(request):
     total_items_sold =sum(order.total_items for order in Order.objects.all())
     low_stock = Shop_All.objects.filter(stock__lt=5).count()
     
+    # Contact messages
+    total_messages = ContactMessage.objects.count()
+    unread_messages = ContactMessage.objects.filter(is_read=False).count()
+
+    
      # Recent orders
     recent_orders = Order.objects.all().order_by('-created_at')[:5]
     
     # Recent products
     recent_products = Shop_All.objects.all().order_by('-created_at')[:5]
     
+    # Recent contact messages
+    recent_messages = ContactMessage.objects.all().order_by('-created_at')[:5]
+
+    
     context = {
         'total_products': total_products,
         'total_orders': total_orders,
         'total_items_sold': total_items_sold,
         'low_stock': low_stock,
+        'total_messages': total_messages,
+        'unread_messages': unread_messages,
         'recent_orders': recent_orders,
         'recent_products': recent_products,
+        'recent_messages': recent_messages,
     }
     return render(request, 'admin/dashboard.html', context)
 
@@ -1056,6 +1101,110 @@ def admin_review_approve(request, review_id):
     status = "approved" if reviews.is_approved else "disapproved"
     messages.success(request, f'Review from "{reviews.name}" {status}!')
     return redirect('admin_review')
+
+
+@login_required
+def admin_messages(request):
+    """View all messages"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+           
+    # Get search query and filters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('read_status', 'all')
+
+    
+    # Get all orders - ORDER BY newest first
+    Contactmessages = ContactMessage.objects.all().order_by('-created_at')
+    
+        
+    # Apply status filter
+    if status_filter != 'all':
+        Contactmessages = Contactmessages.filter(is_read=(status_filter == 'read'))
+    
+    # Apply search filter
+    if search_query:
+        Contactmessages = Contactmessages.filter(
+            Q(is_read__icontains=search_query) |
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(subject__icontains=search_query) |
+            Q(message__icontains=search_query)
+        )
+
+    # Pagination
+    paginator = Paginator(Contactmessages, 10)
+    page = request.GET.get('page')
+    
+    try:
+        Contactmessages_page = paginator.page(page)
+    except PageNotAnInteger:
+        Contactmessages_page = paginator.page(1)
+    except EmptyPage:
+        Contactmessages_page = paginator.page(paginator.num_pages)
+    
+    return render(request, 'admin/messages.html', {
+        'Contactmessages': Contactmessages_page,
+        'total_messages': Contactmessages.count(),
+        'search_query': search_query,
+        'status_filter': status_filter
+    })
+   
+@login_required  
+def admin_message_detail(request, message_id):
+    """View message details"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+    
+    # ✅ Get the single contact message
+    contact = get_object_or_404(ContactMessage, id=message_id) 
+    
+    # ✅ Mark as read
+    if not contact.is_read:
+        contact.is_read = True
+        contact.save()
+    
+    context = {
+        'contact': contact,
+    }
+    return render(request, 'admin/message_detail.html', context)
+
+@login_required
+def admin_message_delete(request, message_id):
+    """Delete a message"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+
+    message = get_object_or_404(ContactMessage, id=message_id)
+ 
+    
+    if request.method == 'POST':
+        message.delete()
+        messages.success(request, 'Message deleted successfully!')
+        return redirect('admin_messages')
+
+    return render(request, 'admin/message_confirm_delete.html', {'message': message})
+
+def admin_delete_all_messages(request):
+    """Delete all messages - only for superusers"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+    
+    if request.method == 'POST':
+        ContactMessage.objects.all().delete()
+        messages.success(request, 'All messages deleted successfully!')
+        return redirect('admin_messages')
+    
+    context = {
+        'total_messages': ContactMessage.objects.count(),
+        }
+    
+    return render(request, 'admin/messages_confirm_delete_all.html', context)
 
 
 @login_required

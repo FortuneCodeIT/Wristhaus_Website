@@ -29,6 +29,24 @@
             {% if low_stock > 0 %}⚠️ Needs Attention{% else %}✓ All Good{% endif %}
         </span>
     </div>
+
+    <div class="stat-card">
+    <div class="stat-icon">
+        <i class="fas fa-envelope"></i>
+    </div>
+
+    <div class="stat-number">{{ total_messages }}</div>
+
+    <div class="stat-label">Contact Messages</div>
+
+    <span class="stat-badge {% if unread_messages > 0 %}warning{% else %}success{% endif %}">
+        {% if unread_messages > 0 %}
+            {{ unread_messages }} Unread
+        {% else %}
+            ✓ All Read
+        {% endif %}
+    </span>
+</div>
 </div>
 
 <!-- Quick Actions -->
@@ -108,6 +126,86 @@
         <i class="fas fa-shopping-bag" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
         No orders placed yet.
     </p>
+    {% endif %}
+</div>
+
+
+<!-- Recent Contact Messages -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Recent Contact Messages</h3>
+    </div>
+
+    {% if recent_messages %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for contact in recent_messages %}
+            <tr>
+                <td>
+                    <strong>{{ contact.name }}</strong>
+                </td>
+
+                <td>
+                    {{ contact.email }}
+                </td>
+
+             
+                <td>
+                    {% if contact.phone %}
+                        {{ contact.phone }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                  
+
+                <td>
+                    {{ contact.subject }}
+                </td>
+             
+
+                <td>
+                    {{ contact.created_at|date:"M d, Y H:i" }}
+                </td>
+
+                <td>
+                    {% if contact.is_read %}
+                        <span class="status-badge in-stock">
+                            Read
+                        </span>
+                    {% else %}
+                        <span class="status-badge low-stock">
+                            Unread
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+
+    <p style="color: var(--cream-muted); text-align: center; padding: 2rem;">
+        <i class="fas fa-envelope"
+           style="font-size: 2rem; display: block; margin-bottom: 1rem;">
+        </i>
+
+        No contact messages yet.
+    </p>
+
     {% endif %}
 </div>
 

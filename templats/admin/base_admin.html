@@ -711,6 +711,8 @@
     color: var(--cream-muted);
     opacity: 0.7;
 }
+
+
         
         /* ===== RESPONSIVE ===== */
         
@@ -941,6 +943,9 @@
                 </a>
                 <a href="{% url 'admin_review' %}" class="admin-nav-item {% if '/admin/reviews' in request.path %}active{% endif %}">
                     <i class="fas fa-star"></i> Client Reviews
+                </a>
+                <a href="{% url 'admin_messages' %}" class="admin-nav-item {% if '/admin/messages' in request.path %}active{% endif %}">
+                    <i class="fas fa-envelope"></i> Contact Messages
                 </a>
                 <a href="{% url 'admin_dashboard' %}" class="admin-nav-item">
                     <i class="fas fa-cog"></i> Settings

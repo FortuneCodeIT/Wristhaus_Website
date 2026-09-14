@@ -47,5 +47,8 @@ urlpatterns = [
     path('admin/orders/approve/<int:order_id>/', views.admin_order_approve, name='admin_order_approve'),
     path('admin/orders/process/<int:order_id>/', views.admin_order_process, name='admin_order_process'),
     path('admin/orders/cancel/<int:order_id>/', views.admin_order_cancel, name='admin_order_cancel'),
-
+    path('admin/messages/', views.admin_messages, name='admin_messages'),
+    path('admin/messages/detail/<int:message_id>/', views.admin_message_detail, name='admin_message_detail'),
+    path('admin/messages/delete/<int:message_id>/', views.admin_message_delete, name='admin_message_delete'),
+    path('admin/messages/delete-all/', views.admin_delete_all_messages, name='admin_delete_all_messages'),
 ]

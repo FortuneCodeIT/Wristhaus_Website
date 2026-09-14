@@ -183,3 +183,26 @@ class Order(models.Model):
     class Meta:
         ordering = ['-created_at']
         
+
+class ContactMessage(models.Model):
+    
+    choices = [
+        ('Order Question', 'Order Question'),
+        ('Product Inquiry', 'Product Inquiry'),
+        ('Feedback', 'Feedback'),
+        ('Other', 'Other')
+    ]
+    
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=100, choices=choices)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.subject}"

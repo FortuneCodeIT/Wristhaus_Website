@@ -1,0 +1,59 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Message from {{ contact.name }}{% endblock %}
+{% block header %}Message Details{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gold-dark);">
+        <div>
+            <p style="color: var(--cream-muted);">
+                <strong>Message Date:</strong> {{ contact.created_at|date:"F d, Y H:i" }}
+            </p>
+            <p style="color: var(--cream-muted);">
+                <strong>Customer:</strong> 
+                {{ contact.name }}
+            </p>
+            <p style="color: var(--cream-muted);">
+                <strong>Email:</strong> 
+                <a href="mailto:{{ contact.email }}" style="color: var(--gold);">{{ contact.email }}</a>
+            </p>
+            <p style="color: var(--cream-muted);">
+                <strong>Phone:</strong> {{ contact.phone|default:"Not provided" }}
+            </p>
+            <p style="color: var(--cream-muted);">
+                <strong>Subject:</strong> {{ contact.subject }}
+            </p>
+        </div>
+        <div>
+            {% if contact.is_read %}
+                <span class="status-badge in-stock">✅ Read</span>
+            {% else %}
+                <span class="status-badge low-stock">⏳ Unread</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Message Content -->
+    <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: var(--radius-1); border: 1px solid var(--gold-dark); margin-bottom: 1.5rem;">
+        <h3 style="color: var(--cream-deep); margin-bottom: 1rem; font-size: 1.1rem;">
+            <i class="fas fa-envelope"></i> Message:
+        </h3>
+        <p style="color: var(--cream-muted); line-height: 1.8; white-space: pre-wrap;">{{ contact.message }}</p>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding-top: 1.5rem; border-top: 1px solid var(--gold-dark);">
+        <a href="{% url 'admin_messages' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back to Messages
+        </a>
+        <a href="mailto:{{ contact.email }}?subject=Re: {{ contact.subject }}" class="btn btn-gold">
+            <i class="fas fa-reply"></i> Reply via Email
+        </a>
+        <a href="{% url 'admin_message_delete' contact.id %}" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -746,7 +746,7 @@ $(document).ready(function() {
             // Confirmation dialog
             if (confirm(`Are you sure you want to remove all ${itemCount} item(s) from your cart? This action cannot be undone.`)) {
                 // Show loading state on buttons
-                $('#removeAllBtn, #removeAllBtnSummary')
+                $('#removeAllBtn')
                     .prop('disabled', true)
                     .html('<i class="fas fa-spinner fa-spin"></i> Removing...');
                 

@@ -1,0 +1,184 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Orders{% endblock %}
+{% block header %}Orders{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <p style="color: var(--cream-muted);">
+        Total Messages: <strong style="color: var(--gold);">{{ total_messages }}</strong>
+    </p>
+
+    <!-- ✅ Search Results Info -->
+{% if search_query %}
+    <div style=" padding: 0.5rem 1rem; background: rgba(212, 175, 55, 0.1); border-radius: var(--radius-1); border-left: 3px solid var(--gold);">
+        <p style="color: var(--cream-muted); margin: 0;">
+            <i class="fas fa-search"></i> Showing results for: "<strong style="color: var(--gold);">{{ search_query }}</strong>"
+            <a href="{% url 'admin_messages' %}" style="color: var(--cream-muted); margin-left: 1rem; text-decoration: underline;">
+                Clear search
+            </a>
+        </p>
+    </div>
+{% endif %}
+
+        <!-- ✅ Search Bar -->
+    <form method="GET" action="" style="display: flex; gap: 0.5rem; flex: 1; max-width: 500px;">
+        <div style="position: relative; flex: 1;">
+            <input type="text" 
+                   name="search" 
+                   class="form-control" 
+                   placeholder="Search orders by number, customer, or total..." 
+                   value="{{ search_query }}"
+                   style="padding-right: 35px;">
+            {% if search_query %}
+                <a href="{% url 'admin_messages' %}" 
+                   style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--cream-muted); text-decoration: none;">
+                    <i class="fas fa-times"></i>
+                </a>
+            {% else %}
+                <button type="submit" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--cream-muted); cursor: pointer;">
+                    <i class="fas fa-search"></i>
+                </button>
+            {% endif %}
+        </div>
+        <a href="{% url 'admin_messages' %}" class="btn btn-sm btn-outline" style="white-space: nowrap;">
+            <i class="fas fa-sync"></i> Reset
+        </a>
+    </form>
+
+</div>
+
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; padding: 1rem;"">
+        <a href="?read_status=all" class="btn btn-sm {% if not status_filter or status_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}">
+            All
+        </a>
+        <a href="?read_status=unread" class="btn btn-sm {% if status_filter == 'unread' %}btn-primary{% else %}btn-outline{% endif %}">
+            <i class="fas fa-read"></i> Unread
+        </a>
+        <a href="?read_status=read" class="btn btn-sm {% if status_filter == 'read' %}btn-primary{% else %}btn-outline{% endif %}">
+             Read
+        </a>
+
+       
+        <div style=" display:flex; align-items: flex-end; justify-content: flex-end; position: absolute; float: right; right: 1rem;">
+             
+                {% if total_messages > 0 %}
+            <a href="{% url 'admin_delete_all_messages' %}" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash"></i> Delete All
+            </a>
+                {% else %}
+                <a href="{% url 'admin_delete_all_messages' %}" class="btn btn-sm btn-danger" style="pointer-events: none; opacity: 0.5;">
+                <i class="fas fa-trash"></i> Delete All
+                </a>
+            {% endif %}
+             
+        </div>
+       
+    </div>
+
+
+<div class="admin-card">
+    {% if Contactmessages %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for contact in Contactmessages %}
+            <tr>
+                <td>
+                    <strong>{{ contact.name }}</strong>
+                </td>
+
+                <td>
+                    {{ contact.email }}
+                </td>
+
+             
+                <td>
+                    {% if contact.phone %}
+                        {{ contact.phone }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                  
+
+                <td>
+                    {{ contact.subject }}
+                </td>
+             
+
+                <td>
+                    {{ contact.created_at|date:"M d, Y H:i" }}
+                </td>
+
+                <td>
+                    {% if contact.is_read %}
+                        <span class="status-badge in-stock">
+                            Read
+                        </span>
+                    {% else %}
+                        <span class="status-badge low-stock">
+                            Unread
+                        </span>
+                    {% endif %}
+                </td>
+
+                                <td>
+                    <div class="btn-group">
+                        <a href="{% url 'admin_message_detail' contact.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+
+                        <a href="{% url 'admin_message_delete' contact.id %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Pagination -->
+    {% if Contactmessages.has_other_pages %}
+    <div class="pagination">
+        {% if Contactmessages.has_previous %}
+        <a href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}">&laquo; First</a>
+        <a href="?page={{ Contactmessages.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+        {% endif %}
+        
+        <span class="current">Page {{ Contactmessages.number }} of {{ Contactmessages.paginator.num_pages }}</span>
+        
+        {% if Contactmessages.has_next %}
+        <a href="?page={{ Contactmessages.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+        <a href="?page={{ Contactmessages.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div style="text-align: center; padding: 3rem;">
+        <i class="fas fa-shopping-bag" style="font-size: 3rem; color: var(--gold); display: block; margin-bottom: 1rem;"></i>
+        <h3 style="color: var(--cream-deep);">No Messages Found</h3>
+        <p style="color: var(--cream-muted);">Messages will appear here once customers send them.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+
+</style>
+{% endblock %}

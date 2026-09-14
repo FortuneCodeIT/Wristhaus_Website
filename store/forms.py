@@ -12,7 +12,7 @@ class ProductForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Enter product description'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter price', 'step': '0.01'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
+            'image': forms.FileInput(attrs={'class': 'form-control file-input'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter stock quantity'}),
         }
         labels = {
