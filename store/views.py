@@ -603,8 +603,8 @@ def collections(request):
             categories.append({
                 'code': category_code,
                 'name': category_name,
-                'products': products,
-                'count': products.count()
+                'products': products[:8],  # Show only first 12 products
+                'count':  products.count()
             })
     
     context = {

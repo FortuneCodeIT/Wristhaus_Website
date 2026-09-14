@@ -131,7 +131,7 @@
         <!-- Quick Category Navigation -->
         <div class="category-nav" data-aos="fade-up">
             {% for category in categories %}
-                <a href="#category-{{ category.code }}" class="category-nav-btn" data-aos="fade-in" data-aos-delay="{{ forloop.counter|add:50 }}">
+                <a href="#category-{{ category.code }}" class="category-nav-btn" data-aos="fade-in" data-aos-delay="{{ forloop.counter|add:10 }}">
                     {% if category.code == 'watches' %}
                         <i class="fas fa-clock"></i>
                     {% elif category.code == 'bracelets' %}
