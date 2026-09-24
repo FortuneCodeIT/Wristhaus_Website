@@ -205,15 +205,3 @@ FLUTTERWAVE_PUBLIC_KEY = config('FLUTTERWAVE_PUBLIC_KEY', default='')
 FLUTTERWAVE_SECRET_KEY = config('FLUTTERWAVE_SECRET_KEY', default='')
 FLUTTERWAVE_ENCRYPTION_KEY = config('FLUTTERWAVE_ENCRYPTION_KEY', default='')
 
-# ============================================================
-# EMAIL CONFIGURATION
-# ============================================================
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465          # ✅ Change from 587 to 465
-EMAIL_USE_SSL = True      # ✅ Change from USE_TLS to USE_SSL
-EMAIL_USE_TLS = False     # ✅ Must be False when using SSL
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = f'Wristhaus <{config("EMAIL_HOST_USER")}>'
-EMAIL_TIMEOUT = 10   # seconds
