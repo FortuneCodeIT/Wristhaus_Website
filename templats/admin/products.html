@@ -1,5 +1,7 @@
 {% extends 'admin/base_admin.html' %}
 
+{% load humanize%}
+
 {% block title %}Manage Products{% endblock %}
 {% block header %}Manage Products{% endblock %}
 
@@ -72,7 +74,7 @@
                 </td>
                 <td><strong style="color: var(--cream);">{{ product.name }}</strong></td>
                 <td>{{ product.get_category_display }}</td>
-                <td>₦{{ product.price }}</td>
+                <td>₦{{ product.price|intcomma }}</td>
                 <td>{{ product.stock }}</td>
                 <td>
                     <span class="status-badge {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">

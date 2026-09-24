@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -309,15 +310,8 @@
 </style>
 <body>
 
-<!-- <div class="topbar">
-  <div class="wrap">
-    <div class="topbar-marquee"><span>Free shipping on orders over $50</span><span>10% off your first order — code WELCOME10</span></div>
-    <div class="topbar-right"><span>♡ Lifetime Warranty</span><span>USD ⌄</span></div>
-  </div>
-</div> -->
-
 <header class="site">
-  <div class="wrap nav-row">
+  <div class="nav-row">
     <!-- Logo -->
     <a href="{% url 'index' %}" class="logo">
         <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
@@ -333,6 +327,7 @@
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
+        <a href="{% url 'my_orders' %}">My Orders</a>
       <a href="{% url 'track_order' %}">Track Order</a>
              {% if user.is_authenticated and user.is_superuser %}
       <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
@@ -356,6 +351,7 @@
         <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
         <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
         <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+         <li><a href="{% url 'my_orders' %}"><i class="fas fa-box"></i> My Orders</a></li>
         <li><a href="{% url 'track_order' %}"><i class="fas fa-truck"></i> Track Order</a></li>
 
         
@@ -510,9 +506,9 @@
         <div class="price-filter" data-aos="fade-up" data-aos-delay="200">
             <div class="price-filter-header">
                 <div class="price-values">
-                    <span>₦<span id="min-price-display">{{ min_price|default:min_product_price }}</span></span>
+                    <span>₦<span id="min-price-display">{{ min_price|default:min_product_price|intcomma }}</span></span>
                     <span>to</span>
-                    <span>₦<span id="max-price-display">{{ max_price|default:max_product_price }}</span></span>
+                    <span>₦<span id="max-price-display">{{ max_price|default:max_product_price|intcomma }}</span></span>
                 </div>
             </div>
             <div class="price-slider-wrapper">
@@ -577,7 +573,7 @@
             <h3 class="card-title">{{ shop_all.name }}</h3>
             <p class="card-description" style="color: var(--cream-muted);">{{ shop_all.description|truncatechars:60 }}</p>
             <div class="card-rating"><span class="stars">★★★★</span><span>(32)</span></div>
-            <span class="card-price">₦ {{shop_all.price }}</span>
+            <span class="card-price">₦ {{shop_all.price|intcomma }}</span>
             <div class="card-stock">
                <span>In stock:</span>
                    <span class="stock-status {% if shop_all.stock > 0 %}in-stock{% else %}out-of-stock{% endif %}">

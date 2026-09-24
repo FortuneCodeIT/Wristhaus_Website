@@ -119,6 +119,21 @@ class Order(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
+    PAYMENT_STATUS_CHOICES = [
+        ('unpaid', 'Unpaid'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('paystack', '💳 Paystack (Card)'),
+        ('flutterwave', '🌍 Flutterwave'),
+        ('whatsapp', '💬 WhatsApp / Bank Transfer'),
+        ('manual', '💰 Manual / Cash'),
+    ]
+    
+    
     order_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
       
     # User who placed the order (if logged in)
@@ -134,8 +149,27 @@ class Order(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_items = models.IntegerField(default=0)
     
+    
     # Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # ✅ NEW: Payment fields
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='unpaid'
+    )
+    payment_reference = models.CharField(max_length=100, blank=True, null=True)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='whatsapp'   # guest/WhatsApp orders default to this
+    )
+    paid_at = models.DateTimeField(blank=True, null=True)
+    
+    # ✅ NEW: Delivery info
+    delivery_name = models.CharField(max_length=100, blank=True, null=True)
+    delivery_phone = models.CharField(max_length=20, blank=True, null=True)
+    delivery_address = models.TextField(blank=True, null=True)
+    delivery_city = models.CharField(max_length=100, blank=True, null=True)
+    delivery_state = models.CharField(max_length=100, blank=True, null=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -143,7 +177,7 @@ class Order(models.Model):
     
     
     def save(self, *args, **kwargs):
-    # Generate unique order number if not set
+        # Generate unique order number if not set
         if not self.order_number:
             self.order_number = f"WH-{uuid.uuid4().hex[:8].upper()}"
         super().save(*args, **kwargs)
@@ -167,6 +201,21 @@ class Order(models.Model):
             'cancelled': '#dc3545',
         }
         return color_map.get(self.status, '#6c757d')
+  
+    
+    def __str__(self):
+        return f"Order #{self.id} - {self.get_status_display()}"
+    
+    def get_status_order(self):
+        """Get the order index of current status for timeline"""
+        status_order = ['pending', 'processing', 'completed', 'cancelled']
+        try:
+            return status_order.index(self.status)
+        except ValueError:
+            return 0
+    
+    class Meta:
+        ordering = ['-created_at']
   
     
     def __str__(self):

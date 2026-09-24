@@ -1,5 +1,5 @@
 /* ===========================================================
-   LUNA & CO — shared stylesheet
+   WristHaus — shared stylesheet
    Design tokens
 =========================================================== */
 :root {
@@ -24,6 +24,7 @@
     --radius-1: 8px;
     --success: #28a745;
     --danger: #dc3545;
+    --processing: #0229ef;
 }
 
 /* ===========================================================
@@ -292,7 +293,7 @@ header.site {
 }
 
 nav.main {
-    display: flex;
+    display: flex !important;
     gap: 34px;
 }
 
@@ -351,7 +352,7 @@ nav.main a.active {
 }
 
 nav.main-mobile {
-    display: none;
+    display: none !important;
 }
 
 
@@ -2614,6 +2615,36 @@ footer.site {
     padding-top: 1rem;
 }
 
+
+
+
+
+ /* for paystack check out page */
+.pay-card-btn {
+    width: 100%;
+    justify-content: center;
+    background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+    color: white;
+    margin: 1rem 0 0.5rem;
+    padding: 14px;
+    border-radius: var(--radius-1);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.pay-card-btn:hover {
+    background: linear-gradient(135deg, #0a8a52 0%, #2fa87c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(11, 163, 96, 0.3);
+}
+
+
+
+
 .checkout-btn {
     width: 100%;
     justify-content: center;
@@ -2745,7 +2776,7 @@ footer.site {
         padding: 20px 20px;
     }
     nav.main {
-        display: none;
+        display: none !important;
     }
     .nav-toggle {
         display: block;
@@ -2758,8 +2789,8 @@ footer.site {
     }
 
 /* Mobile Nav Sidebar */
-.main-mobile {
-    display: flex;
+nav.main-mobile {
+    display: flex !important;
     flex-direction: column;
     position: fixed;
     top: 0;

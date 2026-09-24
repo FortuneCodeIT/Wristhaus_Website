@@ -15,6 +15,7 @@ import dj_database_url
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from decouple import config
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles', 
+    'django.contrib.humanize',
     'storages',
     'store',
 ]
@@ -187,3 +189,31 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# ============================================================
+# PAYSTACK PAYMENT CONFIGURATION
+# ============================================================
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY', default='')
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY', default='')
+SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
+
+
+# ============================================================
+# FLUTTERWAVE PAYMENT CONFIGURATION
+# ============================================================
+FLUTTERWAVE_PUBLIC_KEY = config('FLUTTERWAVE_PUBLIC_KEY', default='')
+FLUTTERWAVE_SECRET_KEY = config('FLUTTERWAVE_SECRET_KEY', default='')
+FLUTTERWAVE_ENCRYPTION_KEY = config('FLUTTERWAVE_ENCRYPTION_KEY', default='')
+
+# ============================================================
+# EMAIL CONFIGURATION
+# ============================================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465          # ✅ Change from 587 to 465
+EMAIL_USE_SSL = True      # ✅ Change from USE_TLS to USE_SSL
+EMAIL_USE_TLS = False     # ✅ Must be False when using SSL
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = f'Wristhaus <{config("EMAIL_HOST_USER")}>'
+EMAIL_TIMEOUT = 10   # seconds

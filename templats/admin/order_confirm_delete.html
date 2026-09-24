@@ -1,5 +1,6 @@
 {% extends 'admin/base_admin.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Delete Order{% endblock %}
 {% block header %}Delete Order{% endblock %}
@@ -15,7 +16,7 @@
         
         <p style="color: var(--cream-muted); margin-bottom: 1.5rem;">
             Order Number: <strong style="color: var(--gold);">{{ order.order_number|default:"N/A" }}</strong><br>
-            Total: <strong style="color: var(--gold);">₦{{ order.total_price }}</strong><br>
+            Total: <strong style="color: var(--gold);">₦{{ order.total_price|intcomma }}</strong><br>
             Items: <strong style="color: var(--cream-deep);">{{ order.total_items }}</strong>
         </p>
         

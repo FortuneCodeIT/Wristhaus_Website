@@ -1,0 +1,475 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>Shop All Wrist Accessories - Wristhaus Store</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Petit+Formal+Script&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+<link rel="icon" href="{% static 'images/wristhaus_logo.png' %}">
+
+
+</head>
+<style>
+.checkout-grid {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+.checkout-form, .checkout-summary {
+    background: var(--bg);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-1);
+    padding: 2rem;
+}
+.checkout-summary { position: sticky; top: 100px; height: fit-content; }
+.checkout-form h2, .checkout-summary h2 {
+    color: var(--cream-deep);
+    margin-bottom: 1rem;
+}
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    color: var(--cream-muted);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-top: 2px solid var(--gold);
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+.secure-note {
+    margin-top: 1rem;
+    text-align: center;
+    color: var(--cream-muted);
+    font-size: 0.85rem;
+}
+.secure-note i { color: #28a745; }
+.form-group { margin-bottom: 1.5rem; }
+.form-group label {
+    display: block;
+    color: var(--cream-muted);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-dark);
+    border: 1px solid var(--gold-dark);
+    border-radius: 4px;
+    color: var(--cream-muted);
+    font-size: 1rem;
+}
+.form-control:focus { outline: none; border-color: var(--gold); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* ============================================================
+   PAYMENT METHOD OPTIONS
+============================================================ */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.payment-option {
+    position: relative;
+    display: block;
+    cursor: pointer;
+}
+
+/* Hide the actual radio button */
+.payment-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The clickable box */
+.payment-option-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #0d0d0d;
+    border: 1px solid #333;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* Icon */
+.payment-option-content i {
+    font-size: 20px;
+    color: var(--cream-muted);
+    width: 24px;
+    text-align: center;
+    transition: color 0.2s;
+}
+
+/* Text */
+.payment-option-content strong {
+    display: block;
+    color: var(--cream-deep);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    transition: color 0.2s;
+}
+
+.payment-option-content span {
+    display: block;
+    color: var(--cream-muted);
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+/* Hover state */
+.payment-option:hover .payment-option-content {
+    border-color: var(--gold-dark);
+    background: #111;
+}
+
+/* ✅ Selected state */
+.payment-option input[type="radio"]:checked + .payment-option-content {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.08);
+}
+
+.payment-option input[type="radio"]:checked + .payment-option-content i {
+    color: var(--gold);
+}
+
+.payment-option input[type="radio"]:checked + .payment-option-content strong {
+    color: var(--gold);
+}
+
+/* Small checkmark dot on the right */
+.payment-option input[type="radio"]:checked + .payment-option-content::after {
+    content: '';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: inset 0 0 0 4px #0d0d0d;
+}
+
+/* Mobile: stack vertically (already stacked) */
+@media (max-width: 640px) {
+    .payment-option-content {
+        padding: 12px 14px;
+        gap: 12px;
+    }
+
+    .payment-option-content i {
+        font-size: 18px;
+    }
+
+    .payment-option-content strong {
+        font-size: 13px;
+    }
+
+    .payment-option-content span {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .checkout-grid { 
+        flex-direction: column;
+        width: 100%;
+    }
+    .checkout-form {
+        width: 100%;
+    }
+    .checkout-summary { 
+        position: static;
+        width: 100%;
+     }
+    .form-row { grid-template-columns: 1fr; }
+}
+</style>
+
+<body>
+
+
+
+<header class="site">
+  <div class=" nav-row">
+    <!-- Logo -->
+    <a href="{% url 'index' %}" class="logo">
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
+      <span>
+        <span class="word">Wristhaus</span>
+      </span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="main" id="desktop-nav">
+      <a href="{% url 'index' %}">Home</a>
+      <a href="{% url 'shop' %}">Shop</a>
+      <a href="{% url 'collections' %}">Collections</a>
+      <a href="{% url 'about' %}">About Us</a>
+      <a href="{% url 'contact' %}">Contact</a>
+      <a href="{% url 'my_orders' %}">My Orders</a>
+      <a href="{% url 'track_order' %}">Track Order</a>
+             {% if user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
+        {% endif %}
+
+
+    </nav>
+
+    <!-- Mobile Navigation Sidebar -->
+    <nav class="main-mobile" id="mobile-nav">
+      <div class="nav-header">
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="">
+        <div>
+          <div class="logo-text">Wristhaus</div>
+          <!-- <div class="logo-sub">Luxury Watches</div> -->
+        </div>
+      </div>
+      <ul>
+        <li><a href="{% url 'index' %}"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="{% url 'shop' %}"><i class="fas fa-store"></i> Shop</a></li>
+        <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
+        <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
+        <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+         <li><a href="{% url 'my_orders' %}"><i class="fas fa-box"></i> My Orders</a></li>
+        <li><a href="{% url 'track_order' %}"><i class="fas fa-truck"></i> Track Order</a></li>
+
+        
+        {% if user.is_authenticated and user.is_superuser %}
+        <li><a href="{% url 'admin_dashboard' %}"><i class="fas fa-cog"></i> Admin Dashboard</a></li>
+        {% endif %}
+        <li><a href="{% url 'cart_page' %}" class="active">
+            <i class="fas fa-shopping-cart">               
+            </i> Cart <span class="badge">{{ cart_count|default:0 }}</span></a></li>
+      </ul>
+    </nav>
+
+    <!-- Nav Icons -->
+    <div class="nav-icons">   
+      <a href="{% url 'cart_page' %}" aria-label="Cart">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M6 6h15l-1.5 9h-12z"/>
+          <path d="M6 6 5 3H2"/>
+          <circle cx="9" cy="20" r="1.4"/>
+          <circle cx="18" cy="20" r="1.4"/>
+        </svg>
+        <span class="cart-count">{{ cart_count|default:0 }}</span>
+      </a>
+
+      <!-- Admin Link (Desktop) -->
+      <!-- {% if user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}" class="admin-link" style=" color: var(--gold);
+        font-size: 13px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--gold);
+        padding: 5px 10px;
+        border-radius: 6px;
+        margin-left: 10px;">
+        <i class="fas fa-cog"></i> Admin
+      </a>
+      {% endif %} -->
+
+      <!-- Hamburger Button -->
+        <div class="bar-wrapper" id="openNav">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+
+    </div>
+  </div>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay"></div>
+</header>
+
+  
+<div class="page-header" data-aos="fade-down">
+    <div class="wrap">
+        <span class="eyebrow">Almost There</span>
+        <h1>Checkout</h1>
+    </div>
+</div>
+
+<section class="section">
+    <div class="wrap">
+        <div class="checkout-grid" data-aos="fade-up">
+         <div class="checkout-form">
+    <h2>Delivery Information</h2>
+    <p style="color: var(--cream-muted); margin-bottom: 2rem;">
+        Enter your details to proceed with payment.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Full Name *</label>
+            {{ form.name }}
+        </div>
+
+        <div class="form-group">
+            <label>Phone *</label>
+            {{ form.phone }}
+        </div>
+
+        <div class="form-group">
+            <label>Address *</label>
+            {{ form.address }}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>City *</label>
+                {{ form.city }}
+            </div>
+            <div class="form-group">
+                <label>State *</label>
+                {{ form.state }}
+            </div>
+        </div>
+
+        <!-- ✅ PAYMENT METHOD -->
+        <div class="form-group">
+            <label>Payment Method</label>
+        <div class="payment-methods">
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="paystack" checked>
+        <div class="payment-option-content">
+            <i class="fas fa-credit-card"></i>
+            <div>
+                <strong>Card Payment</strong>
+                <span>Powered by Paystack</span>
+            </div>
+        </div>
+    </label>
+
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="flutterwave">
+        <div class="payment-option-content">
+            <i class="fas fa-globe"></i>
+            <div>
+                <strong>Flutterwave</strong>
+                <span>Card, Bank, USSD</span>
+            </div>
+        </div>
+    </label>
+</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary checkout-submit-btn">
+            <i class="fas fa-lock"></i> Continue to Payment
+        </button>
+    </form>
+</div>
+
+            <div class="checkout-summary">
+                <h2>Order Summary</h2>
+                <div class="summary-items">
+                    {% for item in cart_items %}
+                    <div class="summary-item">
+                        <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                        <span>₦{{ item.get_total_price|intcomma }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <span>₦{{ total_price|intcomma }}</span>
+                </div>
+                <div class="secure-note">
+                    <i class="fas fa-lock"></i> Secured by Paystack
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<footer class="site" style="border-top: 1px solid var(--gold); padding-top: 40px;">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-col footer-newsletter">
+        <h4>Stay Connected</h4>
+        <p>Get updates on new arrivals, offers and more.</p>
+        <form class="footer-newsletter-form">
+          <input type="email" placeholder="Enter your email" required aria-label="Email address" disabled>
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+      <div class="footer-col"><h4>Shop</h4><ul><li><a href="{% url 'shop' %}">All Wristhaus</a></li><li><a href="{% url 'collections' %}">Collections</a></li></ul></div>
+      <div class="footer-col"><h4>Company</h4><ul><li><a href="{% url 'about' %}">About Us</a></li><li><a href="{% url 'contact' %}">Contact</a></li></ul></div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <ul>
+          <li><span><a href="https://wa.me/2347041108651" target="_blank" aria-label="WhatsApp">WhatsApp: +2347041108651</a></span></li>
+          <li><span>Email: officialwristhaus@gmail.com</span></li>
+        </ul>
+        <div class="footer-social">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 8h2V5h-2a4 4 0 0 0-4 4v2H9v3h2v7h3v-7h2.5L17 11h-3V9a1 1 0 0 1 1-1Z"/></svg></a>
+          <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 4v10.5a3 3 0 1 1-2.5-3"/><path d="M14 4c.4 2 2 3.5 4 3.8"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Wristhaus . All Rights Reserved.</div>
+  </div>
+</footer>
+
+<script src="{% static 'script.js' %}"></script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+<script>
+
+         // Initialize AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: false,
+            offset: 100,
+            delay: 0,
+        });
+
+        // Refresh AOS after page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.refresh();
+        });
+
+        // Also refresh after all images load
+        window.addEventListener('load', function() {
+            AOS.refresh();
+        });
+    </script>
+
+
+</body>
+</html>

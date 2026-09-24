@@ -1,18 +1,58 @@
 {% extends 'admin/base_admin.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Orders{% endblock %}
 {% block header %}Orders{% endblock %}
 
 {% block content %}
+
+<!-- Top Row: Total + Search -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <p style="color: var(--cream-muted);">
+    <p style="color: var(--cream-muted); margin: 0;">
         Total Orders: <strong style="color: var(--gold);">{{ total_orders }}</strong>
     </p>
 
-    <!-- ✅ Search Results Info -->
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex: 1; justify-content: flex-end; flex-wrap: wrap; max-width: 700px;">
+        <!-- ✅ Delete All Orders Button -->
+        {% if total_orders > 0 %}
+        <a href="{% url 'admin_delete_all_orders' %}" 
+           class="btn btn-sm btn-danger"
+           style="white-space: nowrap;">
+            <i class="fas fa-trash-alt"></i> Delete All Orders
+        </a>
+        {% endif %}
+
+        <!-- Search Bar -->
+        <form method="GET" action="" style="display: flex; gap: 0.5rem; flex: 1; max-width: 400px; min-width: 200px;">
+            <div style="position: relative; flex: 1;">
+                <input type="text"
+                       name="search"
+                       class="form-control"
+                       placeholder="Search orders..."
+                       value="{{ search_query }}"
+                       style="padding-right: 35px;">
+                {% if search_query %}
+                    <a href="{% url 'admin_orders' %}"
+                       style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--cream-muted); text-decoration: none;">
+                        <i class="fas fa-times"></i>
+                    </a>
+                {% else %}
+                    <button type="submit" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--cream-muted); cursor: pointer;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                {% endif %}
+            </div>
+            <a href="{% url 'admin_orders' %}" class="btn btn-sm btn-outline" style="white-space: nowrap;">
+                <i class="fas fa-sync"></i> Reset
+            </a>
+        </form>
+    </div>
+</div>
+
+<!-- ✅ Search Results Info -->
 {% if search_query %}
-    <div style=" padding: 0.5rem 1rem; background: rgba(212, 175, 55, 0.1); border-radius: var(--radius-1); border-left: 3px solid var(--gold);">
+    <div style="margin-bottom: 1rem; padding: 0.5rem 1rem; background: rgba(212, 175, 55, 0.1); border-radius: var(--radius-1); border-left: 3px solid var(--gold);">
         <p style="color: var(--cream-muted); margin: 0;">
             <i class="fas fa-search"></i> Showing results for: "<strong style="color: var(--gold);">{{ search_query }}</strong>"
             <a href="{% url 'admin_orders' %}" style="color: var(--cream-muted); margin-left: 1rem; text-decoration: underline;">
@@ -22,52 +62,68 @@
     </div>
 {% endif %}
 
-        <!-- ✅ Search Bar -->
-    <form method="GET" action="" style="display: flex; gap: 0.5rem; flex: 1; max-width: 500px;">
-        <div style="position: relative; flex: 1;">
-            <input type="text" 
-                   name="search" 
-                   class="form-control" 
-                   placeholder="Search orders by number, customer, or total..." 
-                   value="{{ search_query }}"
-                   style="padding-right: 35px;">
-            {% if search_query %}
-                <a href="{% url 'admin_orders' %}" 
-                   style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--cream-muted); text-decoration: none;">
-                    <i class="fas fa-times"></i>
-                </a>
-            {% else %}
-                <button type="submit" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--cream-muted); cursor: pointer;">
-                    <i class="fas fa-search"></i>
-                </button>
-            {% endif %}
-        </div>
-        <a href="{% url 'admin_orders' %}" class="btn btn-sm btn-outline" style="white-space: nowrap;">
-            <i class="fas fa-sync"></i> Reset
-        </a>
-    </form>
-
+<!-- ✅ PAYMENT FILTER TABS -->
+<div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-1);">
+    <span style="color: var(--cream-muted); font-weight: 600; margin-right: 10px; display: flex; align-items: center;">
+        <i class="fas fa-money-bill-wave"></i> Payment:
+    </span>
+    <a href="?payment=all{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if not payment_filter or payment_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}">
+        All ({{ payment_counts.all }})
+    </a>
+    <a href="?payment=paid{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if payment_filter == 'paid' %}btn-primary{% else %}btn-outline{% endif %}">
+        ✅ Paid ({{ payment_counts.paid }})
+    </a>
+    <a href="?payment=unpaid{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if payment_filter == 'unpaid' %}btn-primary{% else %}btn-outline{% endif %}">
+        ⏳ Unpaid ({{ payment_counts.unpaid }})
+    </a>
+    <a href="?payment=failed{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if payment_filter == 'failed' %}btn-primary{% else %}btn-outline{% endif %}">
+        ❌ Failed ({{ payment_counts.failed }})
+    </a>
 </div>
 
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; padding: 1rem;"">
-        <a href="?status=all" class="btn btn-sm {% if not status_filter or status_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}">
-            All
-        </a>
-        <a href="?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline{% endif %}">
-            ⏳ Pending
-        </a>
-        <a href="?status=processing" class="btn btn-sm {% if status_filter == 'processing' %}btn-primary{% else %}btn-outline{% endif %}">
-            🔄 Processing
-        </a>
-        <a href="?status=completed" class="btn btn-sm {% if status_filter == 'completed' %}btn-primary{% else %}btn-outline{% endif %}">
-            ✅ Completed
-        </a>
-        <a href="?status=cancelled" class="btn btn-sm {% if status_filter == 'cancelled' %}btn-primary{% else %}btn-outline{% endif %}">
-            ❌ Cancelled
-        </a>
-    </div>
+<!-- ✅ ORDER STATUS FILTER TABS -->
+<div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-1);">
+    <span style="color: var(--cream-muted); font-weight: 600; margin-right: 10px; display: flex; align-items: center;">
+        <i class="fas fa-info-circle"></i> Status:
+    </span>
+    <a href="?status=all{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if not status_filter or status_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}">
+        All ({{ status_counts.all }})
+    </a>
+    <a href="?status=pending{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline{% endif %}">
+        ⏳ Pending ({{ status_counts.pending }})
+    </a>
+    <a href="?status=processing{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if status_filter == 'processing' %}btn-primary{% else %}btn-outline{% endif %}">
+        🔄 Processing ({{ status_counts.processing }})
+    </a>
+    <a href="?status=completed{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if status_filter == 'completed' %}btn-primary{% else %}btn-outline{% endif %}">
+        ✅ Completed ({{ status_counts.completed }})
+    </a>
+    <a href="?status=cancelled{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="btn btn-sm {% if status_filter == 'cancelled' %}btn-primary{% else %}btn-outline{% endif %}">
+        ❌ Cancelled ({{ status_counts.cancelled }})
+    </a>
+</div>
 
+<div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-1);">
+    <span style="color: var(--cream-muted); font-weight: 600; margin-right: 10px;">
+        <i class="fas fa-credit-card"></i> Method:
+    </span>
+    <a href="?method=all" class="btn btn-sm {% if not method_filter or method_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+    <a href="?method=paystack" class="btn btn-sm {% if method_filter == 'paystack' %}btn-primary{% else %}btn-outline{% endif %}">💳 Paystack</a>
+    <a href="?method=flutterwave" class="btn btn-sm {% if method_filter == 'flutterwave' %}btn-primary{% else %}btn-outline{% endif %}">🌍 Flutterwave</a>
+    <a href="?method=whatsapp" class="btn btn-sm {% if method_filter == 'whatsapp' %}btn-primary{% else %}btn-outline{% endif %}">💬 WhatsApp</a>
+    <a href="?method=manual" class="btn btn-sm {% if method_filter == 'manual' %}btn-primary{% else %}btn-outline{% endif %}">💰 Manual</a>
+</div>
 
+<!-- Orders Table -->
 <div class="admin-card">
     {% if orders %}
     <table class="admin-table">
@@ -75,8 +131,11 @@
             <tr>
                 <th>Order #</th>
                 <th>Customer</th>
+                <th>Contact</th>
                 <th>Items</th>
                 <th>Total</th>
+                <th>Payment</th>
+                <th>Method</th>
                 <th>Status</th>
                 <th>Date</th>
                 <th>Actions</th>
@@ -85,29 +144,84 @@
         <tbody>
             {% for order in orders %}
             <tr>
-                <td><strong style="color: var(--cream);">#{{ order.id }}</strong></td>
+                <td>
+                    <strong style="color: var(--cream); font-size:12px;">
+                       {{ order.order_number|default:order.id }}
+                    </strong>
+                </td>
                 <td>
                     {% if order.user %}
                         {{ order.user.username }}
-                        <br><small style="color: var(--cream-muted);">{{ order.user.email }}</small>
+                        <br><small style="color: var(--cream-muted); ">{{ order.user.email }}</small>
+                    {% elif order.delivery_name %}
+                        {{ order.delivery_name }}
                     {% else %}
                         <span style="color: var(--cream-muted);">Guest</span>
                     {% endif %}
                 </td>
-                <td>{{ order.total_items }} items</td>
-                <td><strong style="color: var(--gold);">₦{{ order.total_price }}</strong></td>
                 <td>
-                    <span class="status-badge {% if order.status == 'completed' %}in-stock{% elif order.status == 'pending' %}low-stock{% elif order.status == 'processing' %}processing{% else %}out-of-stock{% endif %}">
+                    {% if order.delivery_phone %}
+                        <small style="color: var(--cream-muted);">
+                         +{{ order.delivery_phone }}
+                        </small>
+                    {% else %}
+                        <span style="color: var(--cream-muted);">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ order.total_items }}</td>
+                <td><strong style="color: var(--gold);">₦{{ order.total_price|intcomma }}</strong></td>
+                <td>
+                    {% if order.payment_method == 'paystack' %}
+                        <span class="status-badge" style="background: rgba(0, 139, 132, 0.15); color: #00ecf9;">
+                            Paystack
+                        </span>
+                    {% elif order.payment_method == 'flutterwave' %}
+                        <span class="status-badge" style="background: rgba(255,140,0,0.15); color: #ff8c00;">
+                            Flutterwave
+                        </span>
+                    {% elif order.payment_method == 'whatsapp' %}
+                        <span class="status-badge" style="background: rgba(37,211,102,0.15); color: #25D366;">
+                            WhatsApp
+                        </span>
+                    {% elif order.payment_method == 'manual' %}
+                        <span class="status-badge" style="background: rgba(255,193,7,0.15); color: #ffc107;">
+                            Manual
+                        </span>
+                    {% else %}
+                        <span style="color: var(--cream-muted);">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if order.payment_status == 'paid' %}
+                        <span class="status-badge in-stock">Paid</span>
+                    {% elif order.payment_status == 'failed' %}
+                        <span class="status-badge out-of-stock">Failed</span>
+                    {% elif order.payment_status == 'refunded' %}
+                        <span class="status-badge out-of-stock"> Refunded</span>
+                    {% else %}
+                        <span class="status-badge low-stock">Unpaid</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="status-badge
+                        {% if order.status == 'completed' %}in-stock
+                        {% elif order.status == 'pending' %}low-stock
+                        {% elif order.status == 'processing' %}processing
+                        {% else %}out-of-stock{% endif %}">
                         {{ order.get_status_display }}
                     </span>
                 </td>
-                <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <small style="color: var(--cream-muted);">
+                        {{ order.created_at|date:"M d, Y" }}<br>
+                        {{ order.created_at|date:"H:i" }}
+                    </small>
+                </td>
                 <td>
                     <div class="btn-group">
                         <a href="{% url 'admin_order_detail' order.id %}" class="btn btn-sm btn-primary">
                             <i class="fas fa-eye"></i>
                         </a>
-
                         <a href="{% url 'admin_order_delete' order.id %}" class="btn btn-sm btn-danger">
                             <i class="fas fa-trash"></i>
                         </a>
@@ -117,37 +231,43 @@
             {% endfor %}
         </tbody>
     </table>
-    
+
     <!-- Pagination -->
     {% if orders.has_other_pages %}
     <div class="pagination">
         {% if orders.has_previous %}
-        <a href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}">&laquo; First</a>
-        <a href="?page={{ orders.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+        <a href="?page=1{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; First</a>
+        <a href="?page={{ orders.previous_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
         {% endif %}
-        
+
         <span class="current">Page {{ orders.number }} of {{ orders.paginator.num_pages }}</span>
-        
+
         {% if orders.has_next %}
-        <a href="?page={{ orders.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
-        <a href="?page={{ orders.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last &raquo;</a>
+        <a href="?page={{ orders.next_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+        <a href="?page={{ orders.paginator.num_pages }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if payment_filter and payment_filter != 'all' %}&payment={{ payment_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Last &raquo;</a>
         {% endif %}
     </div>
     {% endif %}
-    
+
     {% else %}
     <div style="text-align: center; padding: 3rem;">
         <i class="fas fa-shopping-bag" style="font-size: 3rem; color: var(--gold); display: block; margin-bottom: 1rem;"></i>
         <h3 style="color: var(--cream-deep);">No Orders Found</h3>
-        <p style="color: var(--cream-muted);">Orders will appear here once customers place them.</p>
+        <p style="color: var(--cream-muted);">
+            {% if search_query or status_filter != 'all' or payment_filter != 'all' %}
+                Try adjusting your filters or <a href="{% url 'admin_orders' %}" style="color: var(--gold);">clear all filters</a>.
+            {% else %}
+                Orders will appear here once customers place them.
+            {% endif %}
+        </p>
     </div>
     {% endif %}
 </div>
 
 <style>
 .status-badge.processing {
-    background: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
+    background: rgba(7, 73, 255, 0.2);
+    color: var(--processing);
 }
 </style>
 {% endblock %}

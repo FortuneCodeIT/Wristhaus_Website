@@ -1,4 +1,5 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,6 +33,7 @@
             --danger: #dc3545;
             --success: #28a745;
             --warning: #ffc107;
+            --processing: #0229ef;
             --info: #17a2b8;
             --sidebar-width: 250px;
             --sidebar-collapsed: 0px;
@@ -189,6 +191,7 @@
             padding: 20px;
             min-height: 100vh;
             transition: margin-left 0.3s ease;
+            overflow-x: auto;
         }
         
         /* ===== HEADER ===== */
@@ -343,6 +346,7 @@
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+            overflow-x: auto;
         }
         
         .admin-card-header {
@@ -667,7 +671,10 @@
             background: rgba(220, 53, 69, 0.2);
             color: var(--danger);
         }
-        
+        .status-badge.processing {
+            background: rgba(7, 73, 255, 0.2);
+            color: var(--processing);
+        }
         /* ===== CONFIRMATION MODAL ===== */
         .confirm-dialog {
             text-align: center;

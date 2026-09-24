@@ -1,0 +1,87 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Delete All Orders{% endblock %}
+{% block header %}Delete All Orders{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div style="text-align: center; padding: 2rem 1rem; max-width: 600px; margin: 0 auto;">
+        
+        <div style="font-size: 4rem; color: #dc3545; margin-bottom: 1rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <h2 style="color: var(--cream-deep); margin-bottom: 0.5rem;">
+            Delete All Orders?
+        </h2>
+
+        <p style="color: var(--cream-muted); margin-bottom: 1rem; font-size: 1rem;">
+            You are about to permanently delete
+            <strong style="color: #dc3545;">{{ total_orders }}</strong>
+            order{{ total_orders|pluralize }}.
+        </p>
+
+        <div style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; border-radius: var(--radius-1); padding: 1rem; margin: 1.5rem 0; text-align: left;">
+            <p style="color: #dc3545; margin: 0; font-size: 0.9rem; line-height: 1.6;">
+                <strong><i class="fas fa-info-circle"></i> Warning:</strong>
+                This action cannot be undone. All order data — including items, payment references, delivery information, and history — will be permanently removed.
+            </p>
+        </div>
+
+        <p style="color: var(--cream-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            Are you absolutely sure you want to proceed?
+        </p>
+
+        <form method="post" style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" style="padding: 12px 28px; font-size: 1rem;"
+                    onclick="return confirm('⚠️ FINAL WARNING: This will delete ALL {{ total_orders }} orders permanently. Continue?');">
+                <i class="fas fa-trash-alt"></i> Yes, Delete All Orders
+            </button>
+            <a href="{% url 'admin_orders' %}" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+<style>
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-primary {
+    background: var(--olive);
+    color: white;
+    border: none;
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.btn-primary:hover {
+    background: var(--olive-soft);
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

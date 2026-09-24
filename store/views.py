@@ -13,12 +13,17 @@ from django.contrib import messages
 from django.db import transaction, IntegrityError, OperationalError
 from django.views.decorators.http import require_POST
 from .models import Home_Collection, Shop_All, Cart, Order, CartItem, ClientReview, ContactMessage
-from .forms import ProductForm, ReviewForm, AdminProfileForm, AdminPasswordChangeForm  # We'll create this
+from .forms import ProductForm, ReviewForm, AdminProfileForm, AdminPasswordChangeForm  
 from django.utils import timezone
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings 
 import urllib.parse
 import time 
 import json
 import logging
+import requests  # ✅ ADD THIS
+
 
 logger = logging.getLogger(__name__)
 
@@ -309,6 +314,427 @@ def cart_page(request):
     
     return render(request, 'cart.html', context)
 
+
+
+
+
+
+
+
+
+
+
+
+# ============================================================
+# PAYSTACK PAYMENT VIEWS
+# ============================================================
+
+def checkout_page(request):
+    """Show delivery form before payment"""
+    cart = get_or_create_cart(request)
+    cart_items = cart.items.all()
+    
+    if not cart_items:
+        messages.warning(request, 'Your cart is empty.')
+        return redirect('cart_page')
+    
+    total_price = cart.get_total_price()
+    cart_count = cart.get_total_items()
+    
+    # Pre-fill form for logged-in users
+    initial = {}
+    if request.user.is_authenticated:
+        initial = {
+            'name': request.user.get_full_name() or request.user.username,
+            'phone': getattr(request.user.profile, 'phone', '') or '',
+            'address': getattr(request.user.profile, 'address', '') or '',
+            'city': getattr(request.user.profile, 'city', '') or '',
+            'state': getattr(request.user.profile, 'state', '') or '',
+        }
+    
+    if request.method == 'POST':
+        from .forms import DeliveryForm
+        form = DeliveryForm(request.POST)
+        if form.is_valid():
+            request.session['delivery_info'] = form.cleaned_data
+            payment_method = request.POST.get('payment_method', 'paystack')
+            if payment_method == 'flutterwave':
+                return redirect('pay_with_flutterwave')
+            return redirect('pay_with_paystack')
+    else:
+        from .forms import DeliveryForm
+        form = DeliveryForm(initial=initial)
+    
+    context = {
+        'form': form,
+        'cart_items': cart_items,
+        'total_price': total_price,
+        'cart_count': cart_count,
+    }
+    return render(request, 'checkout.html', context)
+
+
+
+def pay_with_paystack(request):
+    """Create order and initialize Paystack payment"""
+    cart = get_or_create_cart(request)
+    cart_items = cart.items.all()
+    
+    if not cart_items:
+        messages.warning(request, 'Your cart is empty.')
+        return redirect('cart_page')
+    
+    # Get delivery info from session
+    delivery_info = request.session.get('delivery_info')
+    if not delivery_info:
+        messages.warning(request, 'Please fill in your delivery information.')
+        return redirect('checkout_page')
+    
+    total_price = cart.get_total_price()
+    
+    # Prepare order items
+    order_items = []
+    for item in cart_items:
+        order_items.append({
+            'product_id': item.product.id,
+            'product_name': item.product.name,
+            'price': str(item.product.price),
+            'quantity': item.quantity,
+            'subtotal': str(item.get_total_price()),
+            'image_url': item.product.get_image_url(),  
+        })
+    
+    # ✅ Create order (unpaid)
+    order = Order.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        session_key=request.session.session_key,
+        items=order_items,
+        total_price=total_price,
+        total_items=cart.get_total_items(),
+        status='pending',
+        payment_status='unpaid',
+        payment_method='paystack',
+        delivery_name=delivery_info['name'],
+        delivery_phone=delivery_info['phone'],
+        delivery_address=delivery_info['address'],
+        delivery_city=delivery_info['city'],
+        delivery_state=delivery_info['state'],
+    )
+    
+    logger.info(f"✅ Order {order.order_number} created (unpaid)")
+    
+    # ✅ Paystack API request
+    headers = {
+        'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+        'Content-Type': 'application/json',
+    }
+    
+    callback_url = request.build_absolute_uri('/payment/verify/')
+    
+    # Email for Paystack (must be valid)
+    customer_email = (
+        request.user.email 
+        if request.user.is_authenticated and request.user.email 
+        else 'guest@wristhaus.com'
+    )
+    
+    data = {
+        'email': customer_email,
+        'amount': int(total_price * 100),  # Convert to kobo
+        'reference': order.order_number,
+        'callback_url': callback_url,
+        'metadata': {
+            'order_id': order.id,
+            'order_number': order.order_number,
+            'customer_name': delivery_info['name'],
+            'customer_phone': delivery_info['phone'],
+        }
+    }
+    
+    try:
+        response = requests.post(
+            'https://api.paystack.co/transaction/initialize',
+            json=data,
+            headers=headers,
+            timeout=30
+        )
+        res = response.json()
+        
+        if res.get('status'):
+            # ✅ Clear cart BEFORE redirecting to Paystack
+            cart_items.delete()
+            request.session.pop('delivery_info', None)
+            
+            logger.info(f"✅ Paystack initialized. Redirecting to payment page.")
+            return redirect(res['data']['authorization_url'])
+        else:
+            logger.error(f"❌ Paystack error: {res.get('message')}")
+            messages.error(request, f"Payment error: {res.get('message', 'Unknown error')}")
+            return redirect('cart_page')
+    
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ Network error: {str(e)}")
+        messages.error(request, 'Could not connect to payment gateway. Please try again.')
+        return redirect('cart_page')
+
+
+def verify_payment(request):
+    """Verify payment after Paystack redirects back"""
+    reference = request.GET.get('reference')
+    
+    if not reference:
+        messages.error(request, 'No payment reference found.')
+        return redirect('index')
+    
+    # Find the order
+    try:
+        order = Order.objects.get(order_number=reference)
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('index')
+    
+    # If already paid, skip verification
+    if order.payment_status == 'paid':
+        return render(request, 'payment_success.html', {'order': order})
+    
+    # ✅ Verify with Paystack
+    headers = {
+        'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+    }
+    
+    try:
+        response = requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers=headers,
+            timeout=30
+        )
+        res = response.json()
+        
+        if res.get('status') and res['data']['status'] == 'success':
+            # ✅ Payment successful
+            order.payment_status = 'paid'
+            order.payment_reference = reference
+            order.paid_at = timezone.now()
+            order.status = 'processing'
+            order.save()
+            
+            # Save delivery info to user profile if logged in
+            if order.user and hasattr(order.user, 'profile'):
+                profile = order.user.profile
+                profile.phone = order.delivery_phone
+                profile.address = order.delivery_address
+                profile.city = order.delivery_city
+                profile.state = order.delivery_state
+                profile.save()
+            
+            logger.info(f"✅ Payment verified for order {order.order_number}")
+            messages.success(request, f'✅ Payment successful! Order #{order.order_number} confirmed.')
+            return render(request, 'payment_success.html', {'order': order})
+        else:
+            # ❌ Payment failed
+            order.payment_status = 'failed'
+            order.save()
+            logger.warning(f"❌ Payment failed for order {order.order_number}")
+            messages.error(request, 'Payment verification failed.')
+            return render(request, 'payment_failed.html', {'order': order})
+    
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ Verification network error: {str(e)}")
+        messages.error(request, 'Could not verify payment. Please contact support.')
+        return redirect('index')
+
+
+
+def pay_with_flutterwave(request):
+    """Create order and initialize Flutterwave payment"""
+    cart = get_or_create_cart(request)
+    cart_items = cart.items.all()
+
+    if not cart_items:
+        messages.warning(request, 'Your cart is empty.')
+        return redirect('cart_page')
+
+    delivery_info = request.session.get('delivery_info')
+    if not delivery_info:
+        messages.warning(request, 'Please fill in your delivery information.')
+        return redirect('checkout_page')
+
+    total_price = cart.get_total_price()
+
+    # Prepare order items
+    order_items = []
+    for item in cart_items:
+        order_items.append({
+            'product_id': item.product.id,
+            'product_name': item.product.name,
+            'price': str(item.product.price),
+            'quantity': item.quantity,
+            'subtotal': str(item.get_total_price()),
+            'image_url': item.product.get_image_url(),  
+        })
+
+    # Create order (unpaid)
+    order = Order.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        session_key=request.session.session_key,
+        items=order_items,
+        total_price=total_price,
+        total_items=cart.get_total_items(),
+        status='pending',
+        payment_status='unpaid',
+        payment_method='flutterwave',
+        delivery_name=delivery_info['name'],
+        delivery_phone=delivery_info['phone'],
+        delivery_address=delivery_info['address'],
+        delivery_city=delivery_info['city'],
+        delivery_state=delivery_info['state'],
+    )
+
+    logger.info(f"✅ Order {order.order_number} created (unpaid) — Flutterwave")
+
+    # ✅ Flutterwave API request
+    headers = {
+        'Authorization': f'Bearer {settings.FLUTTERWAVE_SECRET_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    callback_url = request.build_absolute_uri('/payment/verify/flutterwave/')
+
+    customer_email = (
+        request.user.email
+        if request.user.is_authenticated and request.user.email
+        else 'guest@wristhaus.com'
+    )
+
+    data = {
+        'tx_ref': order.order_number,
+        'amount': str(total_price),
+        'currency': 'NGN',
+        'redirect_url': callback_url,
+        'customer': {
+            'email': customer_email,
+            'phonenumber': delivery_info['phone'],
+            'name': delivery_info['name'],
+        },
+        'customizations': {
+            'title': 'Wristhaus Order',
+            'description': f'Order {order.order_number}',
+        },
+    }
+
+    try:
+        response = requests.post(
+            'https://api.flutterwave.com/v3/payments',
+            json=data,
+            headers=headers,
+            timeout=30
+        )
+        res = response.json()
+
+        if res.get('status') == 'success':
+            cart_items.delete()
+            request.session.pop('delivery_info', None)
+            logger.info(f"✅ Flutterwave initialized. Redirecting to payment page.")
+            return redirect(res['data']['link'])
+        else:
+            logger.error(f"❌ Flutterwave error: {res.get('message')}")
+            messages.error(request, f"Payment error: {res.get('message', 'Unknown error')}")
+            return redirect('cart_page')
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ Network error: {str(e)}")
+        messages.error(request, 'Could not connect to payment gateway. Please try again.')
+        return redirect('cart_page')
+    
+    
+    
+def verify_flutterwave_payment(request):
+    """Verify payment after Flutterwave redirects back"""
+    tx_ref = request.GET.get('tx_ref')
+    transaction_id = request.GET.get('transaction_id')
+    status = request.GET.get('status')
+
+    if not tx_ref:
+        messages.error(request, 'No payment reference found.')
+        return redirect('index')
+
+    try:
+        order = Order.objects.get(order_number=tx_ref)
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('index')
+
+    if order.payment_status == 'paid':
+        return render(request, 'payment_success.html', {'order': order})
+
+    # ✅ Verify with Flutterwave API
+    headers = {
+        'Authorization': f'Bearer {settings.FLUTTERWAVE_SECRET_KEY}',
+    }
+
+    try:
+        response = requests.get(
+            f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify',
+            headers=headers,
+            timeout=30
+        )
+        res = response.json()
+
+        if res.get('status') == 'success' and res['data']['status'] == 'successful':
+            order.payment_status = 'paid'
+            order.payment_reference = str(transaction_id)
+            order.paid_at = timezone.now()
+            order.status = 'processing'
+            order.save()
+
+            if order.user and hasattr(order.user, 'profile'):
+                profile = order.user.profile
+                profile.phone = order.delivery_phone
+                profile.address = order.delivery_address
+                profile.city = order.delivery_city
+                profile.state = order.delivery_state
+                profile.save()
+
+            logger.info(f"✅ Flutterwave payment verified for order {order.order_number}")
+            messages.success(request, f'✅ Payment successful! Order #{order.order_number} confirmed.')
+            return render(request, 'payment_success.html', {'order': order})
+        else:
+            order.payment_status = 'failed'
+            order.save()
+            logger.warning(f"❌ Flutterwave payment failed for order {order.order_number}")
+            messages.error(request, 'Payment verification failed.')
+            return render(request, 'payment_failed.html', {'order': order})
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ Verification network error: {str(e)}")
+        messages.error(request, 'Could not verify payment. Please contact support.')
+        return redirect('index')
+
+
+def order_receipt(request, order_number):
+    """Display order receipt - accessible by anyone with the order number"""
+    order = get_object_or_404(Order, order_number=order_number)
+    items = order.items
+
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    # Backfill images for old orders
+    for item in items:
+        if not item.get('image_url'):
+            product = Shop_All.objects.filter(id=item.get('product_id')).first()
+            item['image_url'] = product.get_image_url() if product else None
+
+    context = {
+        'order': order,
+        'items': items,
+    }
+    return render(request, 'order_receipt.html', context)
+
+
+
+
+
 def generate_whatsapp_message(cart_items, total_price, request=None, order=None):
     """Generate WhatsApp order message with image previews"""
     if not cart_items:
@@ -420,6 +846,7 @@ def checkout_to_whatsapp(request):
                 'price': str(item.product.price),
                 'quantity': item.quantity,
                 'subtotal': str(item.get_total_price()),
+                'image_url': item.product.get_image_url(),  
             })
         
         # ✅ Create order
@@ -429,7 +856,8 @@ def checkout_to_whatsapp(request):
             items=order_items,
             total_price=total_price,
             total_items=cart.get_total_items(),
-            status='pending'
+            status='pending',
+            payment_method='whatsapp',
         )
         
         logger.info(f"✅ Order #{order.id} created with order number: {order.order_number}")
@@ -441,7 +869,8 @@ def checkout_to_whatsapp(request):
         # ✅ FIX: Pass the order object to the message function
         message = generate_whatsapp_message(cart_items, total_price, request, order=order)
         encoded_message = urllib.parse.quote(message)
-        phone_number = "2347041108651"
+        phone_number = "2347030816894"
+        # phone_number = "2347041108651"
         whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
         
         # Clear cart
@@ -471,6 +900,10 @@ def track_order(request):
     order = None
     error = None
     
+    cart = get_or_create_cart(request)
+    cart_count = cart.get_total_items()
+
+    
     if order_number:
         try:
             order = Order.objects.get(order_number=order_number)
@@ -481,6 +914,7 @@ def track_order(request):
         'order': order,
         'order_number': order_number,
         'error': error,
+        'cart_count': cart_count
     }
     return render(request, 'track_order.html', context)
 
@@ -670,6 +1104,29 @@ def contact(request):
     return render(request, 'contact.html', context)
 
 
+def my_orders(request):
+    """Show all orders placed by the current visitor (based on session)"""
+    if not request.session.session_key:
+        request.session.save()
+
+    session_key = request.session.session_key
+
+    orders = Order.objects.filter(
+        session_key=session_key
+    ).order_by('-created_at')
+
+    cart = get_or_create_cart(request)
+    cart_count = cart.get_total_items()
+
+    context = {
+        'orders': orders,
+        'cart_count': cart_count,
+    }
+    return render(request, 'my_orders.html', context)
+
+
+
+
 
 
 # ... (keep your existing views)
@@ -829,50 +1286,80 @@ def admin_product_delete(request, product_id):
     
 @login_required
 def admin_orders(request):
-    """View all orders"""
+    """View all orders with search, status, and payment filters"""
     if not request.user.is_superuser:
         messages.error(request, 'You do not have permission to access the admin panel.')
         return redirect('index')
-    
-        
-    # Get search query and filters
+
+    # Get filters
     search_query = request.GET.get('search', '')
     status_filter = request.GET.get('status', 'all')
+    payment_filter = request.GET.get('payment', 'all')
 
-    
-    # Get all orders - ORDER BY newest first
+    # Get all orders
     orders = Order.objects.all().order_by('-created_at')
     
-        
+    method_filter = request.GET.get('method', 'all')
+
+    if method_filter != 'all':
+        orders = orders.filter(payment_method=method_filter)
+
     # Apply status filter
     if status_filter != 'all':
         orders = orders.filter(status=status_filter)
-    
+
+    # ✅ Apply payment filter
+    if payment_filter != 'all':
+        orders = orders.filter(payment_status=payment_filter)
+
     # Apply search filter
     if search_query:
         orders = orders.filter(
-            Q(status__icontains=search_query) |
             Q(order_number__icontains=search_query) |
             Q(session_key__icontains=search_query) |
-            Q(total_price__icontains=search_query)
+            Q(total_price__icontains=search_query) |
+            Q(delivery_name__icontains=search_query) |
+            Q(delivery_phone__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query)
         )
 
     # Pagination
     paginator = Paginator(orders, 10)
     page = request.GET.get('page')
-    
+
     try:
         orders_page = paginator.page(page)
     except PageNotAnInteger:
         orders_page = paginator.page(1)
     except EmptyPage:
         orders_page = paginator.page(paginator.num_pages)
-    
+
+    # ✅ Counts for status filters
+    status_counts = {
+        'all': Order.objects.count(),
+        'pending': Order.objects.filter(status='pending').count(),
+        'processing': Order.objects.filter(status='processing').count(),
+        'completed': Order.objects.filter(status='completed').count(),
+        'cancelled': Order.objects.filter(status='cancelled').count(),
+    }
+
+    # ✅ Counts for payment filters
+    payment_counts = {
+        'all': Order.objects.count(),
+        'paid': Order.objects.filter(payment_status='paid').count(),
+        'unpaid': Order.objects.filter(payment_status='unpaid').count(),
+        'failed': Order.objects.filter(payment_status='failed').count(),
+    }
+
     return render(request, 'admin/orders.html', {
         'orders': orders_page,
         'total_orders': orders.count(),
         'search_query': search_query,
         'status_filter': status_filter,
+        'payment_filter': payment_filter,
+        'status_counts': status_counts,
+        'payment_counts': payment_counts,
     })
     
     
@@ -891,6 +1378,14 @@ def admin_order_detail(request, order_id):
     if isinstance(items, str):
         import json
         items = json.loads(items)
+        
+    for item in items:
+        if not item.get('image_url'):
+            product = Shop_All.objects.filter(id=item.get('product_id')).first()
+            if product:
+                item['image_url'] = product.get_image_url()
+            else:
+                item['image_url'] = None
     
     context = {
         'order': order,
@@ -958,6 +1453,64 @@ def admin_order_cancel(request, order_id):
     
     messages.success(request, f'❌ Order #{order.id} has been CANCELLED!')
     return redirect('admin_order_detail', order_id=order.id)
+
+
+@login_required
+def admin_order_mark_paid(request, order_id):
+    """Manually mark an order as paid (for WhatsApp/bank transfer orders)"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+    
+    order = get_object_or_404(Order, id=order_id)
+    order.payment_status = 'paid'
+    order.paid_at = timezone.now()
+    order.payment_reference = f"MANUAL-{order.order_number}"
+    order.status = 'processing'
+    if not order.payment_method or order.payment_method == 'whatsapp':
+        order.payment_method = 'manual'
+    order.save()
+    
+    messages.success(request, f'✅ Order #{order.order_number} marked as PAID!')
+    return redirect('admin_order_detail', order_id=order.id)
+
+
+@login_required
+def admin_order_mark_unpaid(request, order_id):
+    """Revert an order back to unpaid"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+    
+    order = get_object_or_404(Order, id=order_id)
+    order.payment_status = 'unpaid'
+    order.paid_at = None
+    order.payment_reference = None
+    order.save()
+    
+    messages.warning(request, f'⚠️ Order #{order.order_number} marked as UNPAID.')
+    return redirect('admin_order_detail', order_id=order.id)
+
+
+@login_required
+def admin_delete_all_orders(request):
+    """Delete ALL orders (superuser only)"""
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access the admin panel.')
+        return redirect('index')
+
+    if request.method == 'POST':
+        total = Order.objects.count()
+        Order.objects.all().delete()
+        messages.success(request, f'🗑️ All {total} orders have been deleted.')
+        return redirect('admin_orders')
+
+    # GET: show confirmation page
+    context = {
+        'total_orders': Order.objects.count(),
+    }
+    return render(request, 'admin/orders_confirm_delete_all.html', context)
+
 
 
 @login_required

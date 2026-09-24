@@ -1,5 +1,6 @@
 {% extends 'admin/base_admin.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Order #{{ order.id }}{% endblock %}
 {% block header %}Order #{{ order.id }}{% endblock %}
@@ -10,12 +11,18 @@
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <div>
             <p style="color: var(--cream-muted);">
+                <strong>Order Number:</strong>
+                <span style="color: var(--gold); font-weight: 600;">{{ order.order_number|default:order.id }}</span>
+            </p>
+            <p style="color: var(--cream-muted);">
                 <strong>Order Date:</strong> {{ order.created_at|date:"F d, Y H:i" }}
             </p>
             <p style="color: var(--cream-muted);">
                 <strong>Customer:</strong> 
                 {% if order.user %}
                     {{ order.user.username }} ({{ order.user.email }})
+                {% elif order.delivery_name %}
+                    {{ order.delivery_name }}
                 {% else %}
                     <span style="color: var(--cream-muted);">Guest User</span>
                 {% endif %}
@@ -23,19 +30,103 @@
             <p style="color: var(--cream-muted);">
                 <strong>Session:</strong> {{ order.session_key|default:"N/A" }}
             </p>
-            <p style="color: var(--cream-muted); margin-top: 10px;">
-                <strong>Current Status:</strong> 
-                <span class="status-badge {% if order.status == 'completed' %}in-stock{% elif order.status == 'pending' %}low-stock{% elif order.status == 'processing' %}processing{% else %}out-of-stock{% endif %}" 
-                      style="font-size: 1rem; padding: 0.4rem 1rem;">
-                    {{ order.get_status_display }}
-                </span>
-            </p>
         </div>
         <div style="text-align: right;">
-            <h3 style="color: var(--gold);">Total: ₦{{ order.total_price }}</h3>
+            <h3 style="color: var(--gold);">Total: ₦{{ order.total_price|intcomma }}</h3>
             <p style="color: var(--cream-muted);">Items: {{ order.total_items }}</p>
         </div>
     </div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+
+    <!-- Order Status -->
+    <div style=" padding: 1rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-1); text-align: center;">
+        <p style="color: var(--cream-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Order Status</p>
+        <span class="status-badge 
+            {% if order.status == 'completed' %}in-stock
+            {% elif order.status == 'pending' %}low-stock
+            {% elif order.status == 'processing' %}processing
+            {% else %}out-of-stock{% endif %}" 
+            style="font-size: 1rem; padding: 0.5rem 1rem;">
+            {{ order.get_status_display }}
+        </span>
+    </div>
+
+    <!-- Payment Status -->
+    <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-1); text-align: center;">
+        <p style="color: var(--cream-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Payment Status</p>
+        <span class="status-badge 
+            {% if order.payment_status == 'paid' %}in-stock
+            {% elif order.payment_status == 'failed' %}out-of-stock
+            {% else %}low-stock{% endif %}" 
+            style="font-size: 1rem; padding: 0.5rem 1rem;">
+            {% if order.payment_status == 'paid' %}✅ Paid
+            {% elif order.payment_status == 'failed' %}❌ Failed
+            {% elif order.payment_status == 'refunded' %}🔄 Refunded
+            {% else %}⏳ Unpaid{% endif %}
+        </span>
+    </div>
+
+    <!-- ✅ Payment Method -->
+    <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: var(--radius-1); text-align: center;">
+        <p style="color: var(--cream-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Payment Method</p>
+        <span class="status-badge" style="font-size: 1rem; padding: 0.5rem 1rem;
+            {% if order.payment_method == 'paystack' %}background: rgba(11,163,96,0.2); color: #0ba360;
+            {% elif order.payment_method == 'flutterwave' %}background: rgba(255,140,0,0.2); color: #ff8c00;
+            {% elif order.payment_method == 'whatsapp' %}background: rgba(37,211,102,0.2); color: #25D366;
+            {% else %}background: rgba(255,193,7,0.2); color: #ffc107;{% endif %}">
+            {{ order.get_payment_method_display }}
+        </span>
+    </div>
+</div>
+
+    <!-- ✅ PAYMENT DETAILS (only if paid) -->
+    {% if order.payment_status == 'paid' %}
+    <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; border-radius: var(--radius-1); padding: 1rem; margin-bottom: 1.5rem;">
+        <p style="color: #28a745; font-weight: 600; margin-bottom: 0.75rem;">
+            <i class="fas fa-check-circle"></i> Payment Received
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; color: var(--cream-muted); font-size: 0.9rem;">
+            <div>
+                <strong style="color: var(--cream-deep);">Reference:</strong> 
+                {{ order.payment_reference|default:"N/A" }}
+            </div>
+            <div>
+                <strong style="color: var(--cream-deep);">Paid At:</strong> 
+                {{ order.paid_at|date:"M d, Y H:i"|default:"N/A" }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ✅ DELIVERY INFORMATION -->
+    {% if order.delivery_name or order.delivery_phone or order.delivery_address %}
+    <div style="background: rgba(0, 0, 0, 0.3); border-radius: var(--radius-1); padding: 1rem; margin-bottom: 1.5rem;">
+        <p style="color: var(--cream-deep); font-weight: 600; margin-bottom: 0.75rem;">
+            <i class="fas fa-truck"></i> Delivery Information
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; color: var(--cream-muted); font-size: 0.9rem;">
+            <div>
+                <strong style="color: var(--cream-deep);">Name:</strong> 
+                {{ order.delivery_name|default:"Not provided" }}
+            </div>
+            <div>
+                <strong style="color: var(--cream-deep);">Phone:</strong> 
+                {% if order.delivery_phone %}
+                    <a href="tel:{{ order.delivery_phone }}" style="color: var(--gold);">
+                        {{ order.delivery_phone }}
+                    </a>
+                {% else %}
+                    Not provided
+                {% endif %}
+            </div>
+            <div style="grid-column: span 2;">
+                <strong style="color: var(--cream-deep);">Address:</strong> 
+                {{ order.delivery_address|default:"Not provided" }}{% if order.delivery_city %}, {{ order.delivery_city }}{% endif %}{% if order.delivery_state %}, {{ order.delivery_state }}{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
     
     <!-- ✅ STATUS CONTROL BUTTONS -->
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1rem; background: rgba(212, 175, 55, 0.05); border-radius: var(--radius-1); border: 1px solid var(--gold-dark);">
@@ -77,45 +168,70 @@
     </div>
     
     <!-- Order Items -->
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>
-                    <strong style="color: var(--cream);">{{ item.product_name }}</strong>
-                </td>
-                <td>₦{{ item.price }}</td>
-                <td>{{ item.quantity }}</td>
-                <td><strong style="color: var(--gold);">₦{{ item.subtotal }}</strong></td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" style="text-align: center; color: var(--cream-muted); padding: 2rem;">
-                    No items found in this order.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="4" style="text-align: right; font-weight: 600; color: var(--cream); font-size: 1.1rem;">Total:</td>
-                <td style="font-weight: 700; color: var(--gold); font-size: 1.3rem;">₦{{ order.total_price }}</td>
-            </tr>
-        </tfoot>
-    </table>
-    
+   <h3 style="color: var(--cream-deep); margin-bottom: 1rem; font-size: 1.1rem;">
+    <i class="fas fa-box"></i> Order Items
+</h3>
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Image</th>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+
+            <!-- ✅ Product Image -->
+            <td>
+                {% if item.image_url %}
+                    <img src="{{ item.image_url }}"
+                         alt="{{ item.product_name }}"
+                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--gold-dark);"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: none; width: 60px; height: 60px; background: rgba(0,0,0,0.2); border-radius: 6px; align-items: center; justify-content: center; color: var(--cream-muted); font-size: 0.65rem; text-align: center; border: 1px solid var(--gold-dark);">
+                        No Image
+                    </div>
+                {% else %}
+                    <div style="width: 60px; height: 60px; background: rgba(0,0,0,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--cream-muted); font-size: 0.65rem; text-align: center; border: 1px solid var(--gold-dark);">
+                        No Image
+                    </div>
+                {% endif %}
+            </td>
+
+            <td>
+                <strong style="color: var(--cream);">{{ item.product_name }}</strong>
+            </td>
+            <td>₦{{ item.price|intcomma }}</td>
+            <td>{{ item.quantity }}</td>
+            <td><strong style="color: var(--gold);">₦{{ item.subtotal|intcomma }}</strong></td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="text-align: center; color: var(--cream-muted); padding: 2rem;">
+                No items found in this order.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="5" style="text-align: right; font-weight: 600; color: var(--cream); font-size: 1.1rem;">Total:</td>
+            <td style="font-weight: 700; color: var(--gold); font-size: 1.3rem;">₦{{ order.total_price|intcomma }}</td>
+        </tr>
+    </tfoot>
+</table>
+
     <!-- Action Buttons -->
     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gold-dark); display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'order_receipt' order.order_number %}" target="_blank" class="btn btn-gold">
+                <i class="fas fa-receipt"></i> View Receipt
+            </a>
         <a href="{% url 'admin_orders' %}" class="btn btn-primary">
             <i class="fas fa-arrow-left"></i> Back to Orders
         </a>
@@ -128,6 +244,21 @@
 
 <style>
 .status-badge.processing {
+    background: rgba(7, 73, 255, 0.2);
+    color: var(--processing);
+}
+
+.status-badge.in-stock {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+}
+
+.status-badge.out-of-stock {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.status-badge.low-stock {
     background: rgba(255, 193, 7, 0.2);
     color: #ffc107;
 }

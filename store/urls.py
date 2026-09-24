@@ -7,11 +7,28 @@ urlpatterns = [
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('shop/', views.shop, name='shop'),
     # NEW: Cart URLs
-    path('cart/', views.cart_page, name='cart_page'),
+    path('cart/', views.cart_page, name='cart_page'),  
     path('add-to-cart/', views.add_to_cart, name='add_to_cart'),
     path('delete-from-cart/', views.delete_from_cart, name='delete_from_cart'),
     path('delete-all-from-cart/', views.delete_all_from_cart, name='delete_all_from_cart'),
-    path('checkout/', views.checkout_to_whatsapp, name='checkout_to_whatsapp'),
+    path('checkout/whatsapp/', views.checkout_to_whatsapp, name='checkout_to_whatsapp'),
+    path('my-orders/', views.my_orders, name='my_orders'),
+    
+   
+    # ✅ Payment URLs
+    path('checkout/', views.checkout_page, name='checkout_page'),
+    path('pay/', views.pay_with_paystack, name='pay_with_paystack'),
+    path('payment/verify/', views.verify_payment, name='verify_payment'),
+    
+    path('pay/flutterwave/', views.pay_with_flutterwave, name='pay_with_flutterwave'),
+    path('payment/verify/flutterwave/', views.verify_flutterwave_payment, name='verify_flutterwave_payment'),
+    
+    path('order/receipt/<str:order_number>/', views.order_receipt, name='order_receipt'),
+    
+    
+    
+    
+    
     path('collections/', views.collections, name='collections'),
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
@@ -47,6 +64,11 @@ urlpatterns = [
     path('admin/orders/approve/<int:order_id>/', views.admin_order_approve, name='admin_order_approve'),
     path('admin/orders/process/<int:order_id>/', views.admin_order_process, name='admin_order_process'),
     path('admin/orders/cancel/<int:order_id>/', views.admin_order_cancel, name='admin_order_cancel'),
+    
+    path('dashboard/orders/mark-paid/<int:order_id>/', views.admin_order_mark_paid, name='admin_order_mark_paid'),
+    path('dashboard/orders/mark-unpaid/<int:order_id>/', views.admin_order_mark_unpaid, name='admin_order_mark_unpaid'),
+    path('dashboard/orders/delete-all/', views.admin_delete_all_orders, name='admin_delete_all_orders'),
+    
     path('admin/messages/', views.admin_messages, name='admin_messages'),
     path('admin/messages/detail/<int:message_id>/', views.admin_message_detail, name='admin_message_detail'),
     path('admin/messages/delete/<int:message_id>/', views.admin_message_delete, name='admin_message_delete'),

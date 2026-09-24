@@ -1,5 +1,5 @@
 {% extends 'admin/base_admin.html' %}
-
+{% load humanize %}
 {% block title %}Dashboard{% endblock %}
 {% block header %}Dashboard{% endblock %}
 
@@ -83,7 +83,7 @@
         <thead>
             <tr>
                 <th>Order #</th>
-                <!-- <th>Customer</th> -->
+                <th>Customer</th>
                 <th>Items</th>
                 <th>Total</th>
                 <th>Status</th>
@@ -94,18 +94,18 @@
         <tbody>
             {% for order in recent_orders %}
             <tr>
-                <td><strong style="color: var(--cream);">#{{ order.id }}</strong></td>
-                <!-- <td>
+                <td><strong style="color: var(--cream);">{{ order.order_number|default:order.id }}</strong></td>
+                <td>
                     {% if order.user %}
                         {{ order.user.username }}
                     {% else %}
                         <span style="color: var(--cream-muted);">Guest</span>
                     {% endif %}
-                </td> -->
+                </td>
                 <td>{{ order.total_items }} items</td>
-                <td><strong style="color: var(--gold);">₦{{ order.total_price }}</strong></td>
+                <td><strong style="color: var(--gold);">₦{{ order.total_price|intcomma }}</strong></td>
                 <td>
-                    <span class="status-badge {% if order.status == 'completed' %}in-stock{% elif order.status == 'pending' %}low-stock{% else %}out-of-stock{% endif %}">
+                    <span class="status-badge {% if order.status == 'completed' %}in-stock{% elif order.status == 'pending' %}low-stock{% else %}processing{% endif %}">
                         {{ order.get_status_display }}
                     </span>
                 </td>
@@ -146,6 +146,7 @@
                 <th>Subject</th>
                 <th>Date</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
 
@@ -189,6 +190,13 @@
                             Unread
                         </span>
                     {% endif %}
+                </td>
+                           <td>
+                    <div class="btn-group">
+                        <a href="{% url 'admin_message_detail' contact.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
 
@@ -242,7 +250,7 @@
                 </td>
                 <td>{{ product.name }}</td>
                 <td>{{ product.get_category_display }}</td>
-                <td>₦{{ product.price }}</td>
+                <td>₦{{ product.price|intcomma }}</td>
                 <td>{{ product.stock }}</td>
                 <td>
                     <span class="status-badge {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">

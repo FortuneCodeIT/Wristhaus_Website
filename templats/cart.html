@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -239,9 +240,8 @@
 </style>
 <body>
 
-{% block content %}
-<header class="site">
-  <div class="wrap nav-row">
+    <header class="site">
+  <div class=" nav-row">
     <!-- Logo -->
     <a href="{% url 'index' %}" class="logo">
         <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
@@ -257,6 +257,7 @@
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
+      <a href="{% url 'my_orders' %}">My Orders</a>
       <a href="{% url 'track_order' %}">Track Order</a>
       
       {% if user.is_authenticated and user.is_superuser %}
@@ -278,6 +279,7 @@
         <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
         <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
         <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+        <li><a href="{% url 'my_orders' %}"><i class="fas fa-box"></i> My Orders</a></li>
         <li><a href="{% url 'track_order' %}"><i class="fas fa-truck"></i> Track Order</a></li>
         
         {% if user.is_authenticated and user.is_superuser %}
@@ -323,20 +325,7 @@
 <section class="section">
     <div class="wrap">
         {% if cart_items %}
-                       <!-- ✅ INSERT THE ORDER SUCCESS MESSAGE HERE -->
-                {% if request.session.last_order_number %}
-                    <div style="background: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; border-radius: var(--radius-1); padding: 1.5rem; margin: 1rem 0; text-align: center;">
-                        <p style="color: #28a745; font-size: 1.1rem;">
-                            <i class="fas fa-check-circle"></i> Your order has been placed!
-                        </p>
-                        <p style="color: var(--cream-deep);">
-                            Order Number: <strong>{{ request.session.last_order_number }}</strong>
-                        </p>
-                        <a href="{% url 'track_order' %}?order_number={{ request.session.last_order_number }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-search"></i> Track Order
-                        </a>
-                    </div>
-                {% endif %}
+          
 
                 <div style="display: flex; justify-content: flex-start; margin-bottom: 1rem;">
                     <button class="btn btn-danger remove-all-btn" id="removeAllBtn">
@@ -358,7 +347,7 @@
                             </div>
                             <div class="cart-item-details">
                                 <h3>{{ item.product.name }}</h3>
-                                <p class="cart-item-price">₦{{ item.product.price }}</p>
+                                <p class="cart-item-price">₦{{ item.product.price|intcomma }}</p>
                                 
                                 <!-- Stock Status -->
                                 <div class="cart-item-stock">
@@ -400,7 +389,7 @@
                                 </div>
                                 
                                 <!-- ✅ FIX: Added id for subtotal -->
-                                <p class="cart-item-subtotal">Subtotal: ₦<span id="subtotal-{{ item.product.id }}">{{ item.get_total_price }}</span></p>
+                                <p class="cart-item-subtotal">Subtotal: ₦<span id="subtotal-{{ item.product.id }}">{{ item.get_total_price|intcomma }}</span></p>
                             </div>
                             <button class="btn btn-remove remove-item" data-product-id="{{ item.product.id }}">
                                 <i class="fas fa-trash"></i> Remove
@@ -420,17 +409,23 @@
                     </div>
                     <div class="summary-row">
                         <span>Subtotal:</span>
-                        <span>₦<span id="cart-subtotal">{{ total_price }}</span></span>
+                        <span>₦<span id="cart-subtotal">{{ total_price|intcomma }}</span></span>
                     </div>
                     <div class="summary-row total-price">
                         <span>Total:</span>
-                        <span>₦<span id="cart-total">{{ total_price }}</span></span>
+                        <span>₦<span id="cart-total">{{ total_price|intcomma }}</span></span>
                     </div>
                     
-                    <a href="{% url 'checkout_to_whatsapp' %}" class="btn btn-primary checkout-btn" target="_blank">
-                        <i class="bx bxl-whatsapp" style="font-size: 18px;"></i> Order Now via WhatsApp
+                       <!-- ✅ Pay with Card -->
+                    <a href="{% url 'checkout_page' %}" class="btn btn-primary pay-card-btn">
+                        <i class="fas fa-credit-card"></i> Pay with Card
                     </a>
-                    
+
+                    <!-- ✅ Order via WhatsApp -->
+                    <a href="{% url 'checkout_to_whatsapp' %}" class="btn btn-primary checkout-btn" target="_blank">
+                        <i class="bx bxl-whatsapp" style="font-size: 18px;"></i> Order via WhatsApp
+                    </a>
+
                     <a href="{% url 'shop' %}" class="btn btn-outline continue-shopping">
                         Continue Shopping
                     </a>
@@ -847,6 +842,6 @@ $(document).ready(function() {
             `)
             .appendTo('head');
 </script>
-{% endblock %}
+
 </body>
 </html>

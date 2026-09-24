@@ -14,6 +14,7 @@
                 }
          },50000);
 
+         
 // Luna & Co — shared behaviors
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -58,43 +59,7 @@ openNav.addEventListener('click', () => {
     });
   }
 
-  // // Contact form
-  // const form = document.querySelector('.contact-form');
-  // if (form) {
-  //   form.addEventListener('submit', (e) => {
-      
-  //     const msg = document.querySelector('.form-msg');
-  //     if (msg) {
-  //       msg.textContent = "Thank you — your message has been received. We'll reply within one business day.";
-  //       msg.classList.add('show');
-  //     }
-  //     form.reset();
-  //   });
-  // }
 
-//   // Newsletter form(s)
-//   document.querySelectorAll('.footer-newsletter-form').forEach(nform => {
-//     nform.addEventListener('submit', (e) => {
-//       e.preventDefault();
-//       const btn = nform.querySelector('button');
-//       const original = btn.textContent;
-//       btn.textContent = 'Subscribed ✓';
-//       setTimeout(() => { btn.textContent = original; nform.reset(); }, 2200);
-//     });
-//   });
-
-  // Buy now buttons — simple cart-count demo
-//   const cartCount = document.querySelector('.cart-count');
-//   document.querySelectorAll('.btn-buy').forEach(btn => {
-//     btn.addEventListener('click', () => {
-//       if (cartCount) {
-//         cartCount.textContent = (parseInt(cartCount.textContent || '0', 10) + 1).toString();
-//       }
-//       const original = btn.textContent;
-//       btn.textContent = 'Added ✓';
-//       setTimeout(() => { btn.textContent = original; }, 1400);
-//     });
-//   });
 
   // FAQ accordion
   document.querySelectorAll('.faq-item').forEach(item => {
@@ -115,89 +80,6 @@ function updateCartCount(count) {
 
 
 
-//   const track = document.querySelector('.slideshow-track');
-// const slides = document.querySelectorAll('.slide');
-// const totalSlides = slides.length;
-
-// // Clone ALL slides and append them (duplicate entire set)
-// slides.forEach(slide => {
-//   const clone = slide.cloneNode(true);
-//   track.appendChild(clone);
-// });
-
-// // Clone ALL slides and prepend them (duplicate entire set)
-// slides.forEach(slide => {
-//   const clone = slide.cloneNode(true);
-//   track.insertBefore(clone, track.firstChild);
-// });
-
-// // Now we have: [clone1, clone2, clone3, clone4, original1, original2, original3, original4, clone1, clone2, clone3, clone4]
-// // We start at the first original slide (index = totalSlides)
-// const allSlides = track.querySelectorAll('.slide');
-// const totalAllSlides = allSlides.length;
-// let currentIndex = totalSlides; // Start at first original slide
-// let isTransitioning = false;
-
-// function slideTo(index, instant = false) {
-//   if (isTransitioning && !instant) return;
- 
-//   if (instant) {
-//     track.style.transition = 'none';
-//   } else {
-//     track.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-//   }
- 
-//   track.style.transform = `translateX(-${index * 100}%)`;
-//   currentIndex = index;
- 
-//   if (!instant) {
-//     isTransitioning = true;
-//     setTimeout(() => {
-//       isTransitioning = false;
-//       checkAndReset();
-//     }, 850);
-//   }
-// }
-
-// function checkAndReset() {
-//   // If we reached the cloned slides at the end, jump back to the original equivalents
-//   if (currentIndex >= totalSlides * 2) {
-//     const newIndex = currentIndex - totalSlides;
-//     slideTo(newIndex, true);
-//   }
- 
-//   // If we reached the cloned slides at the beginning, jump forward to the original equivalents
-//   if (currentIndex < totalSlides) {
-//     const newIndex = currentIndex + totalSlides;
-//     slideTo(newIndex, true);
-//   }
-// }
-
-// function nextSlide() {
-//   slideTo(currentIndex + 1);
-// }
-
-// // Initialize - start at first original slide
-// slideTo(totalSlides, true);
-
-// // Auto-slide every 4 seconds
-// let autoSlide = setInterval(nextSlide, 4000);
-
-// // Pause on hover
-// const hero = document.querySelector('.hero');
-// hero.addEventListener('mouseenter', () => clearInterval(autoSlide));
-// hero.addEventListener('mouseleave', () => {
-//   autoSlide = setInterval(nextSlide, 4000);
-// });
-
-// // Fix for when user leaves tab and comes back
-// document.addEventListener('visibilitychange', () => {
-//   if (document.hidden) {
-//     clearInterval(autoSlide);
-//   } else {
-//     autoSlide = setInterval(nextSlide, 4000);
-//   }
-// });
 
 
   const track = document.querySelector('.slideshow-track');

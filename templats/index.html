@@ -14,11 +14,23 @@
 <link rel="icon" href="{% static 'images/wristhaus_logo.png' %}">
 </head>
 <style>
-
+  
 </style>
+
 <body>
+
+<!-- ✅ PRELOADER -->
+<div id="preloader">
+    <div class="preloader-content">
+        <img src="{% static 'images/wristhaus_logo.png' %}" alt="Wristhaus" class="preloader-logo">
+        <div class="preloader-spinner"></div>
+        <p class="preloader-text">Loading...</p>
+    </div>
+</div>
+
+
 <header class="site">
-  <div class="wrap nav-row">
+  <div class=" nav-row">
     <!-- Logo -->
     <a href="{% url 'index' %}" class="logo">
         <img src="{% static 'images/wristhaus_logo.png' %}" alt="" class="mark">
@@ -34,7 +46,9 @@
       <a href="{% url 'collections' %}">Collections</a>
       <a href="{% url 'about' %}">About Us</a>
       <a href="{% url 'contact' %}">Contact</a>
+      <a href="{% url 'my_orders' %}">My Orders</a>
       <a href="{% url 'track_order' %}">Track Order</a>
+
          
       {% if user.is_authenticated and user.is_superuser %}
       <a href="{% url 'admin_dashboard' %}"> Admin Dashboard</a>
@@ -56,6 +70,7 @@
         <li><a href="{% url 'collections' %}"><i class="fas fa-layer-group"></i> Collections</a></li>
         <li><a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a></li>
         <li><a href="{% url 'contact' %}"><i class="fas fa-envelope"></i> Contact</a></li>
+        <li><a href="{% url 'my_orders' %}"><i class="fas fa-box"></i> My Orders</a></li>
         <li><a href="{% url 'track_order' %}"><i class="fas fa-truck"></i> Track Order</a></li>
 
         {% if user.is_authenticated and user.is_superuser %}
@@ -401,6 +416,7 @@
 
 
 <script src="{% static 'script.js' %}"></script>
+<script src="{% static 'shop.js' %}"></script>
 
 
 <!-- Scripts -->
