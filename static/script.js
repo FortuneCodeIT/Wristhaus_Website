@@ -79,10 +79,7 @@ function updateCartCount(count) {
 }
 
 
-
-
-
-  const track = document.querySelector('.slideshow-track');
+const track = document.querySelector('.slideshow-track');
 const slides = document.querySelectorAll('.slide');
 const totalSlides = slides.length;
 

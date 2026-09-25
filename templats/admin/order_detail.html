@@ -65,6 +65,24 @@
             {% elif order.payment_status == 'refunded' %}🔄 Refunded
             {% else %}⏳ Unpaid{% endif %}
         </span>
+        <!-- ✅ Manual Payment Control -->
+            <div style="margin-top: 1rem;">
+                {% if order.payment_status == 'paid' %}
+                    <a href="{% url 'admin_order_mark_unpaid' order.id %}"
+                    class="btn btn-sm btn-warning"
+                    onclick="return confirm('Mark this order as UNPAID?')"
+                    style="font-size: 0.8rem;">
+                        <i class="fas fa-undo"></i> Mark Unpaid
+                    </a>
+                {% else %}
+                    <a href="{% url 'admin_order_mark_paid' order.id %}"
+                    class="btn btn-sm btn-success"
+                    onclick="return confirm('Confirm you have received payment for this order?')"
+                    style="font-size: 0.8rem;">
+                        <i class="fas fa-check-circle"></i> Mark Paid
+                    </a>
+                {% endif %}
+            </div>
     </div>
 
     <!-- ✅ Payment Method -->
