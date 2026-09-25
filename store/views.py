@@ -1057,8 +1057,7 @@ def checkout_to_whatsapp(request):
         # ✅ FIX: Pass the order object to the message function
         message = generate_whatsapp_message(cart_items, total_price, request, order=order)
         encoded_message = urllib.parse.quote(message)
-        phone_number = "2347030816894"
-        # phone_number = "2347041108651"
+        phone_number = "2347041108651"
         whatsapp_url = f"https://wa.me/{phone_number}?text={encoded_message}"
         
         # Clear cart
