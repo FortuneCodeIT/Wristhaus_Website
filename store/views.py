@@ -328,30 +328,25 @@ def cart_page(request):
 # ============================================================
 # PAYSTACK PAYMENT VIEWS
 # ============================================================
-
 def checkout_page(request):
     """Show delivery form before payment"""
     cart = get_or_create_cart(request)
     cart_items = cart.items.all()
-    
+
     if not cart_items:
         messages.warning(request, 'Your cart is empty.')
         return redirect('cart_page')
-    
+
     total_price = cart.get_total_price()
     cart_count = cart.get_total_items()
-    
-    # Pre-fill form for logged-in users
+
+    # Pre-fill name only for logged-in users
     initial = {}
     if request.user.is_authenticated:
         initial = {
             'name': request.user.get_full_name() or request.user.username,
-            'phone': getattr(request.user.profile, 'phone', '') or '',
-            'address': getattr(request.user.profile, 'address', '') or '',
-            'city': getattr(request.user.profile, 'city', '') or '',
-            'state': getattr(request.user.profile, 'state', '') or '',
         }
-    
+
     if request.method == 'POST':
         from .forms import DeliveryForm
         form = DeliveryForm(request.POST)
@@ -364,7 +359,7 @@ def checkout_page(request):
     else:
         from .forms import DeliveryForm
         form = DeliveryForm(initial=initial)
-    
+
     context = {
         'form': form,
         'cart_items': cart_items,
@@ -372,7 +367,6 @@ def checkout_page(request):
         'cart_count': cart_count,
     }
     return render(request, 'checkout.html', context)
-
 
 
 def pay_with_paystack(request):
