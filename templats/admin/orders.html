@@ -137,7 +137,7 @@
                 <th>Payment</th>
                 <th>Method</th>
                 <th>Status</th>
-                <th>Date</th>
+                <!-- <th>Date</th> -->
                 <th>Actions</th>
             </tr>
         </thead>
@@ -162,7 +162,7 @@
                 <td>
                     {% if order.delivery_phone %}
                         <small style="color: var(--cream-muted);">
-                         +{{ order.delivery_phone }}
+                         {{ order.delivery_phone }}
                         </small>
                     {% else %}
                         <span style="color: var(--cream-muted);">—</span>
@@ -211,12 +211,12 @@
                         {{ order.get_status_display }}
                     </span>
                 </td>
-                <td>
+                <!-- <td>
                     <small style="color: var(--cream-muted);">
                         {{ order.created_at|date:"M d, Y" }}<br>
                         {{ order.created_at|date:"H:i" }}
                     </small>
-                </td>
+                </td> -->
                 <td>
                     <div class="btn-group">
                         <a href="{% url 'admin_order_detail' order.id %}" class="btn btn-sm btn-primary">
