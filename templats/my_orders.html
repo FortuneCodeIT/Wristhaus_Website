@@ -82,6 +82,53 @@
 .status-cancelled  { background: rgba(220, 53, 69, 0.15);  color: #dc3545; }
 .btn-sm { padding: 0.4rem 1rem; font-size: 0.85rem; }
 
+
+/* Copy button */
+.copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid var(--gold-dark);
+    border-radius: 6px;
+    color: var(--gold);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: var(--sans);
+}
+
+.copy-btn:hover {
+    background: var(--gold);
+    color: var(--bg);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+}
+
+.copy-btn.copied {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.copy-btn.copied .copy-text::after {
+    content: ' ✓';
+}
+
+.copy-btn i {
+    font-size: 0.85rem;
+}
+.copy-btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+}
+
+.copy-btn-sm .copy-text {
+    display: none;   /* just the icon */
+}
+
 @media (max-width: 768px) {
     .orders-grid {
     grid-template-columns: 1fr ;
@@ -203,7 +250,16 @@
                     <!-- Header -->
                     <div class="order-header">
                         <div>
-                            <h3 style="color: var(--cream-deep); margin: 0;">#{{ order.order_number }}</h3>
+                           
+                                <h3 style="color: var(--cream-deep); margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        #{{ order.order_number }}
+                                        <button class="copy-btn copy-btn-sm"
+                                                data-order-number="{{ order.order_number }}"
+                                                title="Copy order number">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </h3>
+                            </h3>
                             <p style="color: var(--cream-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
                                 {{ order.created_at|date:"F d, Y H:i" }}
                             </p>
@@ -331,6 +387,64 @@
         window.addEventListener('load', function() {
             AOS.refresh();
         });
+
+
+
+         document.addEventListener('DOMContentLoaded', function() {
+    const copyButtons = document.querySelectorAll('.copy-btn');
+
+    copyButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const textToCopy = this.getAttribute('data-order-number');
+            const $btn = this;
+
+            // Modern clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(function() {
+                    showCopied($btn);
+                }).catch(function(err) {
+                    fallbackCopy(textToCopy, $btn);
+                });
+            } else {
+                fallbackCopy(textToCopy, $btn);
+            }
+        });
+    });
+
+    function showCopied($btn) {
+        const originalText = $btn.querySelector('.copy-text').textContent;
+
+        $btn.classList.add('copied');
+        $btn.querySelector('.copy-text').textContent = 'Copied';
+        $btn.querySelector('i').className = 'fas fa-check';
+
+        setTimeout(function() {
+            $btn.classList.remove('copied');
+            $btn.querySelector('.copy-text').textContent = 'Copy';
+            $btn.querySelector('i').className = 'fas fa-copy';
+        }, 2000);
+    }
+
+    function fallbackCopy(text, $btn) {
+        // For older browsers or non-HTTPS
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            showCopied($btn);
+        } catch (err) {
+            alert('Could not copy. Please select and copy manually: ' + text);
+        }
+
+        document.body.removeChild(textArea);
+    }
+});
     </script>
 
 
