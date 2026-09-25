@@ -241,15 +241,15 @@
                     <!-- Header -->
                     <div class="order-header">
                         <div>
-                            <h3 style="color: var(--cream-deep); margin: 0;">
-                                <h3 style="color: var(--cream-deep); margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                        #{{ order.order_number }}
+            
+                                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; justify-content: center;"></div>
+                                <h2 style="color: var(--cream-deep); margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">#{{ order.order_number }}</h2>                                   
                                     <button class="copy-btn copy-btn-sm"
                                             data-order-number="{{ order.order_number }}"
                                             title="Copy order number">
                                         <i class="fas fa-copy"></i>
                                     </button>
-                                </h3>
+                                </div>
                             </h3>
                             <p style="color: var(--cream-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
                                 {{ order.created_at|date:"F d, Y H:i" }}
