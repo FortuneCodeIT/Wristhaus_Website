@@ -19,6 +19,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings 
 import urllib.parse
+import uuid
 import time 
 import json
 import logging
@@ -333,6 +334,23 @@ def checkout_page(request):
     cart = get_or_create_cart(request)
     cart_items = cart.items.all()
 
+    #     # Check if there's an unpaid order in this session
+    # if request.session.session_key:
+    #     unpaid_order = Order.objects.filter(
+    #         session_key=request.session.session_key,
+    #         payment_status='unpaid',
+    #         status__in=['pending', 'processing']
+    #     ).order_by('-created_at').first()
+
+    #     if unpaid_order:
+    #         messages.info(
+    #             request,
+    #             f'You have an unpaid order (#{unpaid_order.order_number}). '
+    #             f'Complete payment to confirm it.'
+    #         )
+    #         return redirect('resume_payment', order_number=unpaid_order.order_number)
+
+
     if not cart_items:
         messages.warning(request, 'Your cart is empty.')
         return redirect('cart_page')
@@ -456,7 +474,7 @@ def pay_with_paystack(request):
         
         if res.get('status'):
             # ✅ Clear cart BEFORE redirecting to Paystack
-            cart_items.delete()
+            # cart_items.delete()
             request.session.pop('delivery_info', None)
             
             logger.info(f"✅ Paystack initialized. Redirecting to payment page.")
@@ -464,38 +482,47 @@ def pay_with_paystack(request):
         else:
             logger.error(f"❌ Paystack error: {res.get('message')}")
             messages.error(request, f"Payment error: {res.get('message', 'Unknown error')}")
-            return redirect('cart_page')
-    
+            return redirect('checkout_page')   
     except requests.exceptions.RequestException as e:
         logger.error(f"❌ Network error: {str(e)}")
-        messages.error(request, 'Could not connect to payment gateway. Please try again.')
-        return redirect('cart_page')
+        messages.error(request, f'Could not connect to payment gateway: {str(e)}')
+        return redirect('cart_page')      # ← change from cart_page
+
+    except Exception as e:
+        import traceback
+        logger.error(f"❌ Unexpected error: {e}")
+        logger.error(traceback.format_exc())
+        messages.error(request, f'Error: {str(e)}')
+        return redirect('cart_page') 
 
 
 def verify_payment(request):
     """Verify payment after Paystack redirects back"""
     reference = request.GET.get('reference')
-    
+
     if not reference:
         messages.error(request, 'No payment reference found.')
         return redirect('index')
-    
-    # Find the order
-    try:
-        order = Order.objects.get(order_number=reference)
-    except Order.DoesNotExist:
-        messages.error(request, 'Order not found.')
+
+    # ✅ Search by order_number OR payment_reference
+    order = (
+        Order.objects.filter(order_number=reference).first()
+        or Order.objects.filter(payment_reference=reference).first()
+    )
+
+    if not order:
+        messages.error(request, f'Order not found for reference: {reference}')
         return redirect('index')
-    
+
     # If already paid, skip verification
     if order.payment_status == 'paid':
         return render(request, 'payment_success.html', {'order': order})
-    
-    # ✅ Verify with Paystack
+
+    # Verify with Paystack
     headers = {
         'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
     }
-    
+
     try:
         response = requests.get(
             f'https://api.paystack.co/transaction/verify/{reference}',
@@ -503,16 +530,17 @@ def verify_payment(request):
             timeout=30
         )
         res = response.json()
-        
+
         if res.get('status') and res['data']['status'] == 'success':
-            # ✅ Payment successful
             order.payment_status = 'paid'
             order.payment_reference = reference
             order.paid_at = timezone.now()
             order.status = 'processing'
             order.save()
-            
-            # Save delivery info to user profile if logged in
+
+            cart = get_or_create_cart(request)
+            cart.items.all().delete()
+
             if order.user and hasattr(order.user, 'profile'):
                 profile = order.user.profile
                 profile.phone = order.delivery_phone
@@ -520,24 +548,22 @@ def verify_payment(request):
                 profile.city = order.delivery_city
                 profile.state = order.delivery_state
                 profile.save()
-            
-            logger.info(f"✅ Payment verified for order {order.order_number}")
+
             messages.success(request, f'✅ Payment successful! Order #{order.order_number} confirmed.')
             return render(request, 'payment_success.html', {'order': order})
         else:
-            # ❌ Payment failed
             order.payment_status = 'failed'
             order.save()
-            logger.warning(f"❌ Payment failed for order {order.order_number}")
             messages.error(request, 'Payment verification failed.')
             return render(request, 'payment_failed.html', {'order': order})
-    
+
     except requests.exceptions.RequestException as e:
         logger.error(f"❌ Verification network error: {str(e)}")
         messages.error(request, 'Could not verify payment. Please contact support.')
         return redirect('index')
-
-
+    
+    
+    
 
 def pay_with_flutterwave(request):
     """Create order and initialize Flutterwave payment"""
@@ -626,36 +652,46 @@ def pay_with_flutterwave(request):
         res = response.json()
 
         if res.get('status') == 'success':
-            cart_items.delete()
+            # cart_items.delete()
             request.session.pop('delivery_info', None)
             logger.info(f"✅ Flutterwave initialized. Redirecting to payment page.")
             return redirect(res['data']['link'])
         else:
-            logger.error(f"❌ Flutterwave error: {res.get('message')}")
-            messages.error(request, f"Payment error: {res.get('message', 'Unknown error')}")
-            return redirect('cart_page')
+            logger.error(f"❌ Paystack rejected: {res.get('message')}")
+            messages.error(request, f"Paystack error: {res.get('message', 'Unknown')}")
+            return redirect('checkout_page')  
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"❌ Network error: {str(e)}")
-        messages.error(request, 'Could not connect to payment gateway. Please try again.')
-        return redirect('cart_page')
-    
+        logger.error(f"❌ Network error: {e}")
+        messages.error(request, f'Could not connect to Paystack: {str(e)}')
+        return redirect('cart_page')      # ← was track_order
+
+    except Exception as e:
+        import traceback
+        logger.error(f"❌ Unexpected error: {e}")
+        logger.error(traceback.format_exc())
+        messages.error(request, f'Error: {str(e)}')
+        return redirect('cart_page')      # ← was track_order
+        
     
     
 def verify_flutterwave_payment(request):
     """Verify payment after Flutterwave redirects back"""
     tx_ref = request.GET.get('tx_ref')
     transaction_id = request.GET.get('transaction_id')
-    status = request.GET.get('status')
 
     if not tx_ref:
         messages.error(request, 'No payment reference found.')
         return redirect('index')
 
-    try:
-        order = Order.objects.get(order_number=tx_ref)
-    except Order.DoesNotExist:
-        messages.error(request, 'Order not found.')
+    # ✅ Search by order_number OR payment_reference
+    order = (
+        Order.objects.filter(order_number=tx_ref).first()
+        or Order.objects.filter(payment_reference=tx_ref).first()
+    )
+
+    if not order:
+        messages.error(request, f'Order not found for reference: {tx_ref}')
         return redirect('index')
 
     if order.payment_status == 'paid':
@@ -680,6 +716,10 @@ def verify_flutterwave_payment(request):
             order.paid_at = timezone.now()
             order.status = 'processing'
             order.save()
+            
+               # ✅ Clear cart NOW that payment succeeded
+            cart = get_or_create_cart(request)
+            cart.items.all().delete()
 
             if order.user and hasattr(order.user, 'profile'):
                 profile = order.user.profile
@@ -726,9 +766,163 @@ def order_receipt(request, order_number):
     return render(request, 'order_receipt.html', context)
 
 
+def resume_payment(request, order_number):
+    """Resume payment for an unpaid order."""
+    order = get_object_or_404(Order, order_number=order_number)
 
+    if order.payment_status == 'paid':
+        messages.info(request, f'Order #{order.order_number} has already been paid.')
+        return redirect('order_receipt', order_number=order.order_number)
 
+    if order.status == 'cancelled':
+        messages.error(request, 'This order has been cancelled and cannot be paid.')
+        return redirect('order_receipt', order_number=order.order_number)   # ← was track_order
 
+    if order.payment_method == 'flutterwave':
+        return redirect('pay_with_flutterwave_existing', order_number=order.order_number)
+    elif order.payment_method == 'paystack':
+        return redirect('pay_with_paystack_existing', order_number=order.order_number)
+    else:
+        messages.warning(request, 'This order cannot be paid online. Please contact support.')
+        return redirect('order_receipt', order_number=order.order_number)   # ← was track_order
+    
+    
+    
+def pay_with_paystack_existing(request, order_number):
+    """Re-initialize Paystack for an existing unpaid order."""
+    logger.info(f"=== RESUME PAYSTACK FOR {order_number} ===")
+
+    order = get_object_or_404(Order, order_number=order_number)
+
+    if order.payment_status == 'paid':
+        messages.info(request, 'This order is already paid.')
+        return redirect('order_receipt', order_number=order.order_number)
+
+    if not settings.PAYSTACK_SECRET_KEY:
+        messages.error(request, 'Payment gateway not configured. Please contact support.')
+        return redirect('order_receipt', order_number=order.order_number)
+
+    # ✅ Generate a NEW reference for this retry attempt
+    # Format: WH-ABC123-R-<short-uuid>
+    retry_reference = f"{order.order_number}-R-{uuid.uuid4().hex[:6].upper()}"
+
+    headers = {
+        'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    callback_url = request.build_absolute_uri('/payment/verify/')
+
+    customer_email = (
+        request.user.email
+        if request.user.is_authenticated and request.user.email
+        else 'guest@wristhaus.com'
+    )
+
+    data = {
+        'email': customer_email,
+        'amount': int(order.total_price * 100),
+        'reference': retry_reference,          # ← NEW reference
+        'callback_url': callback_url,
+        'metadata': {
+            'order_id': order.id,
+            'order_number': order.order_number,   # Keep original for lookup
+            'retry_reference': retry_reference,
+            'resumed': True,
+        }
+    }
+
+    try:
+        response = requests.post(
+            'https://api.paystack.co/transaction/initialize',
+            json=data,
+            headers=headers,
+            timeout=30
+        )
+        res = response.json()
+
+        if res.get('status'):
+            # Store the retry reference on the order for later verification
+            order.payment_reference = retry_reference
+            order.save()
+            return redirect(res['data']['authorization_url'])
+        else:
+            messages.error(request, f"Paystack error: {res.get('message', 'Unknown')}")
+            return redirect('order_receipt', order_number=order.order_number)
+
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f'Could not connect to Paystack: {str(e)}')
+        return redirect('order_receipt', order_number=order.order_number)
+    
+    
+    
+    
+    
+def pay_with_flutterwave_existing(request, order_number):
+    """Re-initialize Flutterwave for an existing unpaid order."""
+    logger.info(f"=== RESUME FLUTTERWAVE FOR {order_number} ===")
+
+    order = get_object_or_404(Order, order_number=order_number)
+
+    if order.payment_status == 'paid':
+        messages.info(request, 'This order is already paid.')
+        return redirect('order_receipt', order_number=order.order_number)
+
+    if not settings.FLUTTERWAVE_SECRET_KEY:
+        logger.error("❌ FLUTTERWAVE_SECRET_KEY missing on server")
+        messages.error(request, 'Payment gateway not configured. Please contact support.')
+        return redirect('order_receipt', order_number=order.order_number)
+
+    headers = {
+        'Authorization': f'Bearer {settings.FLUTTERWAVE_SECRET_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    callback_url = request.build_absolute_uri('/payment/verify/flutterwave/')
+
+    customer_email = (
+        request.user.email
+        if request.user.is_authenticated and request.user.email
+        else 'guest@wristhaus.com'
+    )
+
+    data = {
+        'tx_ref': order.order_number,
+        'amount': str(order.total_price),
+        'currency': 'NGN',
+        'redirect_url': callback_url,
+        'customer': {
+            'email': customer_email,
+            'phonenumber': order.delivery_phone or '',
+            'name': order.delivery_name or 'Guest',
+        },
+        'customizations': {
+            'title': 'Wristhaus Order',
+            'description': f'Order {order.order_number}',
+        },
+    }
+
+    try:
+        response = requests.post(
+            'https://api.flutterwave.com/v3/payments',
+            json=data,
+            headers=headers,
+            timeout=30
+        )
+        res = response.json()
+
+        if res.get('status') == 'success':
+            return redirect(res['data']['link'])
+        else:
+            messages.error(request, f"Flutterwave error: {res.get('message', 'Unknown')}")
+            return redirect('order_receipt', order_number=order.order_number)
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f'Could not connect to Flutterwave: {str(e)}')
+        return redirect('order_receipt', order_number=order.order_number)
+    
+    
+    
+    
 def generate_whatsapp_message(cart_items, total_price, request=None, order=None):
     """Generate WhatsApp order message with image previews"""
     if not cart_items:

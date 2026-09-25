@@ -238,6 +238,13 @@
                             </p>
                         </div>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            {% if order.payment_status != 'paid' and order.status != 'cancelled' %}
+                                <a href="{% url 'resume_payment' order.order_number %}"
+                                class="btn btn-sm"
+                                style="background: #ffc107; color: #000; font-weight: 700; padding: 0.5rem 1rem;">
+                                    <i class="fas fa-credit-card"></i> Complete Payment
+                                </a>
+                                {% endif %}
                             <a href="{% url 'track_order' %}?order_number={{ order.order_number }}"
                                class="btn btn-primary btn-sm">
                                 <i class="fas fa-truck"></i> Track

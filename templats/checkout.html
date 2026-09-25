@@ -325,6 +325,41 @@
     <p style="color: var(--cream-muted); margin-bottom: 2rem;">
         Enter your details to proceed with payment.
     </p>
+    {% if messages %}
+    <div style="max-width: 900px; margin: 20px auto 0; padding: 0 20px;">
+        {% for message in messages %}
+            <div style="
+                padding: 1rem 1.25rem;
+                margin-bottom: 0.75rem;
+                border-radius: 8px;
+                border: 1px solid
+                {% if message.tags == 'error' %}#dc3545
+                {% elif message.tags == 'warning' %}#ffc107
+                {% elif message.tags == 'success' %}#28a745
+                {% else %}#17a2b8{% endif %};
+                background: rgba(255,255,255,0.05);
+                color: var(--cream-deep);
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 0.95rem;
+            ">
+                <i class="fas
+                    {% if message.tags == 'error' %}fa-exclamation-circle
+                    {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                    {% elif message.tags == 'success' %}fa-check-circle
+                    {% else %}fa-info-circle{% endif %}"
+                    style="font-size: 1.2rem; color:
+                    {% if message.tags == 'error' %}#dc3545
+                    {% elif message.tags == 'warning' %}#ffc107
+                    {% elif message.tags == 'success' %}#28a745
+                    {% else %}#17a2b8{% endif %};">
+                </i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 
     <form method="post">
         {% csrf_token %}
@@ -394,7 +429,7 @@
                 <div class="summary-items">
                     {% for item in cart_items %}
                     <div class="summary-item">
-                        <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                        <span>{{ item.product.name }} × {{ item.quantity }}</span> 
                         <span>₦{{ item.get_total_price|intcomma }}</span>
                     </div>
                     {% endfor %}

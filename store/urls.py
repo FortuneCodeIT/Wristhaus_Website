@@ -25,6 +25,11 @@ urlpatterns = [
     
     path('order/receipt/<str:order_number>/', views.order_receipt, name='order_receipt'),
     
+    # for resum payment
+    path('resume-payment/<str:order_number>/', views.resume_payment, name='resume_payment'),
+    path('pay/paystack/<str:order_number>/', views.pay_with_paystack_existing, name='pay_with_paystack_existing'),
+    path('pay/flutterwave/<str:order_number>/', views.pay_with_flutterwave_existing, name='pay_with_flutterwave_existing'),
+        
     
     
     
