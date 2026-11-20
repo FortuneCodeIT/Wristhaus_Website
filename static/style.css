@@ -2955,7 +2955,7 @@ nav.main-mobile ul a li {
     transform: rotate(-45deg) translate(6px, -6px);
 }
 .bar:nth-child(3) {
-    width: 20px;
+    width: 30px;
     position:absolute;
     right: 0;
     top: 12px;
